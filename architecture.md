@@ -19,7 +19,7 @@ class A {
 
   B b;
 
-  function doSomething(){
+  void doSomething(){
     b.doSomethingToo();
   }
 }
@@ -38,18 +38,111 @@ So, to beware from circular dependencies whole application is splitted into seve
 
 ![](./tiers.png)
 
-Every tier contains one or more components. For Android application every component is represented with some Java object/class, typically, but not limited to. Typically every component is placed into separate Java-package.
+Typical Android application has 4-5 tiers, but you may have more, if you need. Every tier contains one or more components. For Android application every component is represented with some Java object/class, typically, but not limited to. Typically every component is placed into separate Java-package.
 
 Sometimes it is possible for a component to consist of two or more Java classes/objects. In this case make sure that only one "main" class/object has public visibility. Other classes in a components are threated as "helper" classes and should be package-private (or at least you should think about them as a package private). Helper entity classes/object are allowed to be public (see Entities section below). If you don't understand this paragraph, just ignore it for a while ans use a "one component = one class/object" as a rule
 
 There are general rules about components:
 - Different components inside of one tier are independent of each other. They don't even know about each other's existence. So, ```Component 1.1``` has no idea about ```Component 1.2```, and vice versa
 - Any component of a tier may depend on any components of next tier. ```Component 1.X``` may depend on any ```Component 2.X```. Any ```Component 1.X``` may call any methods of ```Component 2.X```
-- 
+- Any tier has no idea about previous tier. Tier 3 components doesn't depend on any of Tier 2 or Tier 1 components and have no idea about their existence.
+- Typically, Tier 1 components should have no direct access to Tier 3 components. So, any tier should access only next tier, but not the next after next. There are some exceptions from this rule, see below.
 
 
 ## Captain and a deckhand
-asdasdas*d*fggdg
+Although tiers below should not depend on tiers above, sometimes it is required for underlying tiers to communicate with tiers above. Here "Captain and a deckhand" concept comes to.
+
+Have you ever been on a ship? On a small sailing yacht, hundred-meters oil tanker or a warship with a thousands of soldiers? Any ship, either small or big one, has a captain and a deckhands.
+
+There two general forms of communication between people on board: the _command_ and the _report_.
+
+The _command_ is a set of words which require immediate and explicit action: "Steer 15 degrees to the left!", "Fore-sail up!", "Move anchor down for 7 meters!". The captain is the one who send _commands_ to a deckhands.
+
+The _report_ is a set of words which contain important information, but are not expected to be followed with an action: "Anchor is ready to go!", "Fuel is running low!", "Fore-sail is torn, need to repair". Deckhands are informing the captain with the _reports_. Report may be a result of previous command, or may be standalone, caused by some unexpected events.
+
+The main difference between report and command is that report is not followed by any action, even if it is urgent and dangerous to life. "Captain, there are stones 100 meters ahead, we're going right to them!" - this is an important information, but nobody on the ship will do something with that until the captain's _command_.
+
+It is very important to understand in any particular moment: is the word spoken a command or report? On a big commercial ships commands and reports are highly formalized to make communications clear. On a small sailing yacht, in a company of friends, especially if their sailing experience is quite equal, difference between captain and a deckhand may become not so clear, but it still persist. "Hey, John, do you see this stones ahead? Let's change our heading to the left a little" - this words will may follow by a crew's action, or no, depending of who says it.
+
+Sometimes it is possible also to have some officers between captain and a deckhand guys (multitier ship). In this case command may come not only from the captain, but from the officers. But the general command-report concept remains the same: captain sends command to an officer: "Prepare to departure!", than officer brings commands to a deckhands or to a lower-level officers: "Warm up the engines!", "Check up people on board", "Make anchor ready to raise". Reports may go back: from the deckhand to officer: "There is a problem in a reserve engine", and from the officer to a captain: "We are ready to departure in 10 minutes".
+
+Typically it is not possible to move a ship (excepting very small boats) with only one man, you need a team usually. But any ship, including the smallest and biggest one, must have only one captain. It is impossible for a deckhand to send a _command_ to a captain - sailors beware of circular dependencies since the ancient times!
+
+Same story with the components in your application. Typically an application consists of many components, it is impossible to build a complex application with one class only. Application components communicate to each other (typically with method calls). Every time one component communicates to another one you should understand, which component is a captain, and which one is a deckhand. Every time you see a method call, you should understand: is it a _command_ or _report_?
+
+Typically, in this example
+
+```java
+import com.somepackage.B;
+
+class A {
+
+  B b;
+
+  void doSomething(){
+    b.doSomethingToo();
+  }
+}
+```
+
+A is the captain, and it sends _commands_ to B. B can use a Listener pattern (or Callback, or Observer, or something you prefer) to _report_ something useful to A
+
+
+```java
+//no import here required!
+
+class B {
+
+  private List<BListener> listeners = new ArrayList<>();
+
+  public void addListener(BListener listener){
+     listeners.add(listener);
+  }
+
+  public void removeListener(BListener listener){
+    listeners.remove(listener);
+  }
+
+  private void fireSomethingHappened(){
+    for(BListener listener : listeners){
+      listener.onSomethingHappened();
+    }
+  }
+
+  private void doingSomeRegularWork(){
+    //....
+    fireSomethingHappened();
+    //....
+  }
+
+
+  public interface BListener{
+    void onSomethingHappened()
+  }
+}
+```
+
+```java
+import com.somepackage.B;
+
+class A {
+
+  B b;
+
+  void subscribeBEvents(){
+    b.addListener(new B.BListener(){
+      public void onSomethingHappened(){
+        onSomethingHappenedWithB();
+      }
+    });
+    // Don't forget to unsubscribe when listening is no longer required
+  }
+
+  void onSomethingHappenedWithB(){
+    //Analyze the situation here and provide new commands, if needed
+  }
+}
+```
 
 ## No static objects/references
 
