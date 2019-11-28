@@ -144,6 +144,10 @@ class A {
 }
 ```
 
+TODO HERE android captain
+
+multiple captains in a software
+
 ## No static objects/references
 
 # General Architecture description
