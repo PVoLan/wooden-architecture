@@ -1,5 +1,9 @@
 This file uses markdown formatting. Use a markdown reader (github/bitbucket/gitlab web interfaces can do it typically) to get nice formatted text.
 
+# Introduction
+
+This is an architecture description I use for an Android applications for the last years. This architecture showed itself in practice as an easy to understand, suitable and agile enough for most typical Android applications. It's core concepts can be used not only for Android applications, but theoretically for any platform (it was originally based on a server-side app I was participated in, then used in crossplatform Xamarin iOS-Android applications)
+
 # Key concepts
 
 ## No circular dependencies
@@ -144,17 +148,24 @@ class A {
 }
 ```
 
+## No static objects/references
+
+Never use static references to keep any data/fields/objects. Also never use singleton pattern. If you have a single non-static object, it is always easy to make it visible in a static context, but vice versa is troublesome.
+
+On android, Application object is a good place to keep any singleton object's - it is guaranteed by Android that you will always have one an only one instance of Application class. It is allowed to have a static reference to an Application object (this is the only one exception from the rule above) with some restrictions, see below. I think you can easily find an analog of this class in other systems.
+
+Static methods are allowed, although, if their execution and result depends only on it's parameters and nothing more. Various helpers are widely used to reduce boilerplate code
+
+# General Architecture description
+
+
 TODO HERE android captain
 
 multiple captains in a software
 
-## No static objects/references
-
-# General Architecture description
 
 # Android details
 
-   vxcvcx
 Unit
 
 # Threading
