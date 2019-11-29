@@ -154,7 +154,10 @@ Never use static references to keep any data/fields/objects. Also never use sing
 
 On android, Application object is a good place to keep any singleton object's - it is guaranteed by Android that you will always have one an only one instance of Application class. It is allowed to have a static reference to an Application object (this is the only one exception from the rule above) with some restrictions, see below. I think you can easily find an analog of this class in other systems.
 
-Static methods are allowed, although, if their execution and result depends only on it's parameters and nothing more. Various helpers are widely used to reduce boilerplate code
+Static methods are allowed, although, \
+a) if their execution and result depends only on it's parameters and nothing more. \
+b) They do not change anything ouside exept it's parameters and return value
+Various helpers are widely used to reduce boilerplate code
 
 # General Architecture description
 
