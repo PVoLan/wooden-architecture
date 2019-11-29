@@ -152,7 +152,7 @@ class A {
 
 Never use static references to keep any data/fields/objects. Also never use singleton pattern. If you have a single non-static object, it is always easy to make it visible in a static context, but vice versa is troublesome.
 
-On android, Application object is a good place to keep any singleton object's - it is guaranteed by Android that you will always have one an only one instance of Application class. It is allowed to have a static reference to an Application object (this is the only one exception from the rule above) with some restrictions, see below. I think you can easily find an analog of this class in other systems.
+On android, Application object is a good place to keep any singleton object's - it is guaranteed by Android that you will always have one an only one instance of Application class. It is allowed to have a static reference to an Application object (this is the only one exception from the rule above) with some restrictions, see below. I think you can easily find an analog of this class in other platforms.
 
 Static methods are allowed, although, \
 a) if their execution and result depends only on it's parameters and nothing more. \
@@ -160,6 +160,13 @@ b) They do not change anything ouside exept it's parameters and return value
 Various helpers are widely used to reduce boilerplate code
 
 # General Architecture description
+
+![architecture preview](./arch_small.png)
+
+[Full size image](./arch.png)
+
+blablabla
+
 
 
 TODO HERE android captain
@@ -179,3 +186,4 @@ Unit
 
 
 //TODO - Billfold refinings
+//
