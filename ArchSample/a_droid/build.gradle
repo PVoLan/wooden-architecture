@@ -1,0 +1,33 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion project.ext.compileSDK
+    buildToolsVersion project.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "ru.pvolan.archsample"
+        minSdkVersion project.ext.minSDK
+        targetSdkVersion project.ext.targetSDK
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "androidx.appcompat:appcompat:$project.ext.androidXAppCompatVersion"
+    implementation "androidx.constraintlayout:constraintlayout:$project.ext.constraintLayoutVersion"
+
+    implementation project(':d_container')
+    implementation project(':f_usecases')
+    implementation project(':v_entities')
+    implementation project(':x_uitools')
+    implementation project(':z_tools')
+}

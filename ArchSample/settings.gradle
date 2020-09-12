@@ -1,0 +1,10 @@
+include ':v_entities'
+include ':x_uitools'
+include ':z_tools'
+include ':s_storage'
+include ':n_network'
+include ':l_logic'
+include ':f_usecases'
+include ':d_container'
+include ':a_droid'
+rootProject.name = "ArchSample"
