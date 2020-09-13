@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="network_error">Network error happened. Please check internet connection. Error code: %s</string>
+    <string name="connection_failed_exception_message">Unable to connect to server. Error code:\n</string>
+    <string name="unexpected_error_code_exception_message">Error message received from server. Please inform support service. Error code:\nUrl: %1$s\nCode: %2$d\nMessage: %3$s</string>
+    <string name="invalid_response_exception_message">Incorrect server response. Please inform support service. Error code:\nUrl: %1$s\nError: %2$s</string>
+    <string name="no_internet_connection">No internet connection</string>
+
+</resources>

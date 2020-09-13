@@ -11,6 +11,10 @@ public class CalendarHelper
     public static final String ISOpatternDefault = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Format
+    ///////////////////////////////////////////////////////////////////////////
+
     public static String toNiceString(Calendar c){
         return format(c, "yyyy-MM-dd HH:mm:ss Z");
     }
@@ -34,6 +38,21 @@ public class CalendarHelper
         SimpleDateFormat isoFormat = new SimpleDateFormat(format);
         c.setTime(isoFormat.parse(str));
         return c;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Unix timestamp
+    ///////////////////////////////////////////////////////////////////////////
+
+    public static Calendar createFromUnix(long unixTimestamp) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(unixTimestamp * 1000);
+        return c;
+    }
+
+    public static long toUnixTimestamp(Calendar calendar){
+        return calendar.getTimeInMillis() / 1000;
     }
 
 }
