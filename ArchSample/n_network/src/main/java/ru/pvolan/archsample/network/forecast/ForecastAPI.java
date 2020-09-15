@@ -51,7 +51,7 @@ public class ForecastAPI {
                 return parseResponse(jsonResponse);
             }
         });
-        
+
     }
 
 

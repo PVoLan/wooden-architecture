@@ -27,6 +27,8 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "androidx.appcompat:appcompat:$project.ext.androidXAppCompatVersion"
+    implementation "androidx.room:room-runtime:$project.ext.androidRoomVersion"
+    annotationProcessor "androidx.room:room-compiler:$project.ext.androidRoomVersion"
 
     implementation project(':v_entities')
     implementation project(':z_tools')
