@@ -34,6 +34,9 @@ public class ForecastStorage {
 
             try {
                 CityForecastDTO cityForecastDTO = dao.findForecast(name);
+
+                if(cityForecastDTO == null) return null;
+
                 List<ForecastDTO> forecastDTOs = dao.getForecasts(cityForecastDTO.id);
 
                 List<CityForecast.Forecast> forecasts = new ArrayList<>(forecastDTOs.size());
