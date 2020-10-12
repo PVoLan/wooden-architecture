@@ -148,6 +148,38 @@ class A {
 }
 ```
 
+## Keep data separated from processing
+
+The code below is a common pattern for various frameworks, especially ORMs.
+
+`user.save()`  
+
+First time I've seen this pattern in 2011 in Microsoft's Entity framework. Years ago I stll find this pattern ambigious and bad.
+
+The user above is expected to be an Entity containing a data, like username, gender, date of birth, etc. This data is independent by it's nature - username is expected to stay the same disregarding of where this user is processed.
+
+But, what code above does? It saves the user. But you can't just save the user by itself! (saving user's life or soul is not a something what can be done with code, so this is not the case). You save user to *somewhere*: to particular database, file, server storage, arraylist or whatever, but there is always a concrete place where you'll store the user.
+
+What if we have multiple cases when this user should be saved to somewhere? The code above assumes that user entity knows something about where it shoud be stored. This can be ok in some particular cases, but in common this knowledge contradicts to the idea of independent entity.
+
+To keep things clear I do not recomnend using this pattern. Instead, use separated   classes to represent the *data*
+
+```java
+class User{
+    String username;
+    Gender gender;
+    Date dateOfBirth;
+}
+```
+
+and use separated classes to *process* the data
+
+`cacheFile.save(user)`  
+`databaseStorage.store(user)`  
+`serverApi.update(user)`  
+
+See also Entities section about common entities restrictions.
+
 ## No static objects/references
 
 Never use static references to keep any data/fields/objects. Also never use singleton pattern. If you have a single non-static object, it is always easy to make it visible in a static context, but vice versa is troublesome.
@@ -185,10 +217,60 @@ Let's go through the architecture and define, what components it contains
 
 <h4>Network</h4>
 
+This module is responsible for sending network requests, receiving data from server, managing connections (if required) etc.
+
+Main public class of the components of this module will typically contain a set of methods like
+
+`ResponseData SendRequest(RequestParams params)`  
+
+Every such a method maps exacltly one request of the API you use. If you use an HTTP API, these methods are the only you need. If you use an API with permanent connection, like direct sockets, WebSockets or similar, you'll also probably need a methods like `connect()` and `disconnect()`, plus an event generator for incoming requests.
+
+I do not recommend put all of the APIs you use into one component. You may have as many network components as you need. Typically, I group public methods into component based on their applicability, maximum 3-5 methods per component: one component will contain all the methods working with user login, another - all the methods processing shop catalog, third - everything about the order processing. But this is not a strict rule, so you may group methods in your component at you choice: as far as most of the API calls are independent from each other, grouping doesn't matter a lot. If you use multiple backends for your needs (for example, your own backend + Facebook API), you may also consider that for grouping.
+
+Public component methods should accept/return global or local Entities as an input/output. Network classes are fully responsible for request formatting and response parsing.
+
+If using global-scope Entities as input/output, network classes should not rely on Entities' structure, field names, etc for parsing and formatting. This case, if an API developer would perform some simple refactoring, which does not change overall application logic (for example, request parameter name would be changed, or JSON response fields would be rearranged), such a refactoring should affect only Network module, without changing public method signatures, Entities and outer code. See also Entities section.
+
+Very important: do not store any data inside the Network module. Public methods behavior should depend only on server state and method parameters passed. Do not store authorization tokens, cookies, other similar data in Network classes fields - use Storage module for that purpose. Network modules are designed for network processing, not for data storage.
+
+Network modukes are also responsible for error handling. This includes connection errors, response formatting errors, server errors - any of them should be handled accurately and translated into independent form. I personally prefer to throw Exceptions, but this is optional, you may provide specific Entity instead.
+
+Retrofit note. You can use Retrofit for request/response formatting, but consider the requirements above. Basic Retrofit features include: relying on Entity field names for formatting, storing a data (like auth tokens) inside the network module - be aware of using this features. Also, note that default Retrofit configuration does not raise any errors, if some required response fields are missing - it just silently puts null into your Entity. Considering that, I find Retrofit quite useless for Wooden architecture, and recommend using OkHttp and manual Json parsing instead.
+
+<h4>Storage</h4>
+
+Storage module represents disk storage. It is responsible for everything needed to store data on internal disk storage: SharedPreferences and SQLite databases is a common example.
+
+Public component methods for this module typically look like:  
+`void saveSomething(SomeEntity something)`  
+`SomeEntity readSomething()`  
+
+It is a common mistake to put some business logic into Storage to "optimize application performance". Although there is nothing wrong with some particular optimizations (for example, there is no need to fetch full table if you need only few records, so WHERE filters are surely appropriate), remember that main storage purpose is to provide save and read functions, but not business logic and data transformation.
+
+Similar to Network module, you may have multiple Storage components, grouped based on their business purpose. But
+
+
+-------------------------------------------------------
+
+storage continue: storages independent, joins, etc
+no saved instance, state and migration tip
+
+memstorage
+
+other utils - bluetooth, outer devices, external file access, etc
+
+entities
+
+usecases
 
 
 
-TODO HERE android captain
+
+main public class define
+
+Public component methods define
+
+android - activity is a captain
 
 multiple captains in a software
 
