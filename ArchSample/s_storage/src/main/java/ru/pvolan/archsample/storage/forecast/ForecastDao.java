@@ -21,9 +21,11 @@ public abstract class ForecastDao {
     @Query("DELETE from CityForecastDTO where id = :id")
     public abstract void deleteCityForecast(long id);
 
-
     @Query("DELETE from ForecastDTO where cityForecastId = :cityForecastId")
     public abstract void deleteForecasts(long cityForecastId);
+
+    @Query("DELETE from ForecastDTO")
+    public abstract void deleteAll();
 
 
     @Query("SELECT * from CityForecastDTO where cityName = :cityName")

@@ -1,5 +1,6 @@
 package ru.pvolan.archsample.logic.exception;
 
+//Base class for all exceptions which can be thrown from this module
 public class LogicException extends Exception {
 
     public LogicException() {

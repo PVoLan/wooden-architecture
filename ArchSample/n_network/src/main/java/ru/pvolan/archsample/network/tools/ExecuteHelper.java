@@ -45,6 +45,13 @@ public class ExecuteHelper {
 
 
     public PResponse executeSync(PRequest request) throws NetworkException {
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if(!isOnline ()) throw new NetworkException ( appContext.getString (R.string.no_internet_connection) );
 
         try {

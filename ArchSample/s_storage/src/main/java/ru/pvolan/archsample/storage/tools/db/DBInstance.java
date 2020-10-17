@@ -29,7 +29,7 @@ public class DBInstance {
     public RoomDatabaseImpl getRoomDatabase() {
         synchronized (sync) {
             if (roomDatabase == null) {
-                doMigration(); //It should be quick if not from launcher activity
+                doMigration(); //It should be quick if called not from launcher screen
             }
             return roomDatabase;
         }

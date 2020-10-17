@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">ArchSample</string>
+    <string name="app_name">OpenWeather</string>
+
+
+    <string name="main_city_hint">City name</string>
+    <string name="main_clear">Clear cache and update</string>
+
+
+    <string name="main_empty_city_name">Please fill city name</string>
 </resources>
