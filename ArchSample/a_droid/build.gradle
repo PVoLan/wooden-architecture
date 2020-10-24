@@ -30,7 +30,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$project.ext.androidXAppCompatVersion"
     implementation "androidx.constraintlayout:constraintlayout:$project.ext.constraintLayoutVersion"
     implementation "androidx.recyclerview:recyclerview:$project.ext.androidXRecyclerViewVersion"
-    implementation "androidx.lifecycle:lifecycle-extensions:$project.ext.androidLifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$project.ext.androidLifecycleVersion"
 
     implementation project(':d_container')
     implementation project(':f_usecases')

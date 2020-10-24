@@ -80,6 +80,8 @@ public class MainScreenUseCase {
         public String getTemperature() {
             return temperature;
         }
+
+        public boolean isWeatherGoodForRunning() { return true; }
     }
 
 
