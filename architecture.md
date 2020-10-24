@@ -260,11 +260,11 @@ The Storage tier is the only place where you should store your data on disk. Do 
 - When a new developer comes to a project, let him know what the application state contains of. This will simplify his/her onboarding.
 - Sometimes it happen so that application _state_ remains the same, but the application _code_ changes. Users call it "update the application of a new version", developers know that update often causes a Storage migration. If you keep all the data in one place, your migration will stay limited to Storage tier only.
 
-By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance.
+By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance. As a minimum, put a `version=1` key-value to your storage.
 
 ### Entites
 
-Entities are data objects. They represent a pieces of data components transfer to each other as method parameters and return values. All the public component methods should have only entities and collections of entities as a parameters and return values.
+Entities are data objects. They represent a pieces of data which components transfer to each other as method parameters and return values. All the public component methods should have only entities and collections of entities as a parameters and return values.
 
 Entites are POJO's (Plain Old Java Objects). They do only contain data. They do not contain any logic, they only store, but do not _process_ any data. They have fields, and have no methods, excepting getters, constructors, and (see below) setters.
 
