@@ -249,12 +249,18 @@ It is a common mistake to put some business logic into Storage to "optimize appl
 
 Similar to Network module, you may have multiple Storage components, grouped based on their business purpose. But keep various storages independent from each other. When using SharedPreferences, it makes sense to use separate preferences file for every storage (see first parameter [here](https://developer.android.com/reference/android/content/Context?hl=en#getSharedPreferences(java.lang.String,%20int))). When using Room storage, the task is more complicated.
 
-Sometimes you may want to put all the SQL tables into one storage, but this may cause your
+Sometimes you may want to put all the SQL tables into one Storage, but this may cause your Storage grow too large and complicated. Sometimes you may want to create separate SQL database for every table, to keep the tables independent. This sounds like a nice idea, but it will cause a) too many boilerplate code ti initialize every DB instance b) more complicated migration management, as far as every database will migrate independently.
 
-```
-storage continue: storages independent, joins, etc
-no saved instance, state and migration tip
-```
+Compromise solution is to use single database instance as a "backend" for multiple storages. In this case you need to make sure you Storages are independent. No cross-Storage foreign key constraints are allowed, and no cross-Storage JOINs are allowed.
+
+By the way, I do not recommend using JOINs and foreign keys at all, at least as far as you have no performance issues. Remember that main Storage purpose is to read and write data. JOINs and foreign keys typically represent a business logic relations between data items, and this logic is not welcome on Storage tier. As far as your performance is fine, do as many logic as possible on Logic or UseCase tier. Yes, I would prefer a `for` loop to JOIN - most of Android developers are good Java developers, but not so good in SQL dialects, so `for` loop is more readable in general. :) Android application rarely has really large database, iterating up to 10000 objects in a `for` loop is not a problem (of course, if you would not make a database request at every iteration). So, again, prefer Logic tier for joining operations and use SQL joins only if have no other option.
+
+The Storage tier is the only place where you should store your data on disk. Do not use SharedPreferences outside on Storage tier, do never store sensitive data in Activity's `savedInstanceState`, and so on. Keeping all the disk-stored data in one module gives you the following benefits
+- Every time when you launch your application, it's behavior, in fact, depends only on what is stored on disk. Stored data is what defines application _state_ in every particular moment between launches. Keeping storages together, you keep all the state in one place.
+- When a new developer comes to a project, let him know what the application state contains of. This will simplify his/her onboarding.
+- Sometimes it happen so that application _state_ remains the same, but the application _code_ changes. Users call it "update the application of a new version", developers know that update often causes a Storage migration. If you keep all the data in one place, your migration will stay limited to Storage tier only.
+
+By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance.
 
 ### Entites
 
