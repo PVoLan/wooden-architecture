@@ -4,6 +4,8 @@ This file uses markdown formatting. Use a markdown reader (github/bitbucket/gitl
 
 This is an architecture description I use for an Android applications for the last years. This architecture showed itself in practice as an easy to understand, suitable and agile enough for most typical Android applications. It's core concepts can be used not only for Android applications, but theoretically for any platform (it was originally based on a server-side app I was participated in, then used in crossplatform Xamarin iOS-Android applications)
 
+[Sample app](./ArchSample) (TODO)
+
 # Key concepts
 
 ## No circular dependencies
@@ -31,9 +33,9 @@ class A {
 
 We also can say that A depends on B in that case (do you see the import required to compile A.java?)
 
-But this concept is not limited to OOP-object. If ```methodA()``` calls ```methodB()``` you may say that ```methodA()``` depends on ```methodB()```. Having a circular dependency for methods typically means a recursion. Recursion is a great thing sometimes, but if one recurrence consists of multiple method calls (especially if methods are placed in different block of code far from each other) it is very difficult to detect and debug.
+But this concept is not limited to OOP-object. If ```methodA()``` calls ```methodB()``` you may say that ```methodA()``` depends on ```methodB()```. Having a circular dependency for methods typically means a recursion. Recursion is a great thing sometimes, but if one recurrence consists of multiple method calls (especially if methods are placed in different blocks of code far from each other) it is very difficult to detect and debug.
 
-If can also treat "object A" as any module of you application, such a gradle module, running instance, particular server, or something.
+You can also treat "object A" as any module of you application, such a gradle module, running instance, particular server, or something.
 
 
 ## Tiers
@@ -83,7 +85,7 @@ class A {
 
   B b;
 
-  void doSomething(){
+  void doSomething() {
     b.doSomethingToo();
   }
 }
@@ -99,28 +101,28 @@ class B {
 
   private List<BListener> listeners = new ArrayList<>();
 
-  public void addListener(BListener listener){
+  public void addListener(BListener listener) {
      listeners.add(listener);
   }
 
-  public void removeListener(BListener listener){
+  public void removeListener(BListener listener) {
     listeners.remove(listener);
   }
 
-  private void fireSomethingHappened(){
-    for(BListener listener : listeners){
+  private void fireSomethingHappened() {
+    for(BListener listener : listeners) {
       listener.onSomethingHappened();
     }
   }
 
-  private void doingSomeRegularWork(){
+  private void doingSomeRegularWork() {
     //....
     fireSomethingHappened();
     //....
   }
 
 
-  public interface BListener{
+  public interface BListener {
     void onSomethingHappened()
   }
 }
@@ -133,9 +135,9 @@ class A {
 
   B b;
 
-  void subscribeBEvents(){
-    b.addListener(new B.BListener(){
-      public void onSomethingHappened(){
+  void subscribeBEvents() {
+    b.addListener(new B.BListener() {
+      public void onSomethingHappened() {
         onSomethingHappenedWithB();
       }
     });
@@ -165,7 +167,7 @@ What if we have multiple cases when this user should be saved to somewhere? The 
 To keep things clear I do not recomnend using this pattern. Instead, use separated   classes to represent the *data*
 
 ```java
-class User{
+class User {
     String username;
     Gender gender;
     Date dateOfBirth;
@@ -203,7 +205,7 @@ Okay, now we'll start with application architecture itself.
 
 ## Gradle role
 
-Pay some attention to gradle modules on the image above. Although you can put all the code into one module, and replace gradle modules with separate Java packages, I'd recommend you to use modules as specified (or, if you know better solution for the purpose described below, please send me a note). Gradle modules are used here as a tool to strictify dependencies.
+Pay some attention to gradle modules on the image above. Although you can put all the code into one module, and replace gradle modules with separate Java packages, I'd recommend you to use modules as specified (or, if you know better solution for the purpose described below, please send me a note). Gradle modules are used here as a tool to strictify dependencies. Pay attention to the `build.gradle` files (dependencies section) in the sample app.
 
 - **Explicit add of new dependencies.** While using packages, it is very easy to add ```import``` to another package. In most cases IDE like Android Studio will add ```import```'s almost automatically, sometimes even without notifying the developer. In contrast, Gradle dependencies are very explicit, they are almost never added automatically. Even when dependency is suggested by IDE, you'll have an explicit dialog and long-running gradle sync process after, so you'll less likely miss it.
 - **Less dependencies, more control.** Every particular Java class file usually has dozens of imports, they are changing often, and it is not easy to control their consistence. In contrast, there are only few gradle dependencies in the project, and they are rarely changed. You (or your team lead) can easily control that no gradle dependencies has been changed improperly
@@ -212,6 +214,99 @@ Pay some attention to gradle modules on the image above. Although you can put al
 ## Arcitecture bricks
 
 Let's go through the architecture and define, what components it contains
+
+### UseCases
+
+Use Cases, probably, is the most important detail of the Wooden architecture. In fact, I think, you can implement Use Cases only, and throw away rest of this document - just this small enhancement could significantly improve code quality of about 60% applications I've ever worked with.
+
+Typically, one UseCase is created for every particular application screen (i.e. one UseCase per one Activity, or one UseCase per Fragment, if you use Fragments). The main UseCase purpose is to provide and process screen data in a way, most suiatble for particular screen.
+
+UseCase class can contain multiple public methods. Every method is responsible for a particular user action on the screen.
+
+You screen (Activity or Fragment) is not allowed to access the application data other than via it's UseCase. You should never access the network, storage, or application logic directly from your UI. **UseCase is the only source of the data for the related UI screen.**
+
+In typical Android application, two basic user action cases can be met.
+
+<h4>Case 1</h4>
+User opens a screen or some other event happens. Some data has to be loaded and shown on this screen. Then you will have a method in corresponding UseCase something like that
+
+```java
+class OrderActvityUseCase {
+  public OrderData loadOrder(String orderId) {
+    //Do some magic - load order from server, check the cache, apply display settings,
+    //join with user profile(s), etc. Do whatever you need to prepare data to be shown to user
+  }
+}
+```
+
+In this example, `orderId` is passed to OrderActivity via Intent. Once started, activity displays a progress bar and launches `OrderActvityUseCase.loadOrder()` method (via AsyncTask or whatever you prefer). UseCase's responsibility is to do _everything_ required to prepare the data to be shown to user: perform server request, ask the local database, perform another server request, check the local settings, etc, then returns a data prepared. Activity hides progress bar and displays the data. Progress bar is optional if you don't need to go to server during the process.
+
+`OrderData` has format as similar to the screen content as possible. For example, if your Activity has to display a list of order items in a form of a table with the following columns: Name, Quantity, Price, Icon representing if discount is applied, Delivery address, - then `OrderData` will look something like that:
+
+```java
+class OrderData {
+  List<OrderItem> items;
+}
+
+class OrderItem {
+  String name;
+  int quantity;
+  BigDecinal price; //Maybe String - if you'd like to apply currency-dependent formatting
+  boolean showDiscountMarker;
+  String deliveryAddress;
+}
+```
+
+<h4>Case 2</h4>
+User fills a form and clicks "Do the magic" button on the screen. Some action has to be performed on this click, and a result has to be shown to user. For example:
+
+```java
+class LoginActvityUseCase {
+
+  //Returns user name. We want to show "Hello $username!" label after login is completed
+  public String login(String login, String password) throws LoginException {
+    //Do some magic - validate the inputs, authorize on server, download user profile,
+    //store it in local cache, apply local settings, load advanced data, etc.
+    //Do whatever you need to process an action and prepare result to be shown to user
+  }
+}
+```
+
+User enters login and password and clicks "Login" button on the screen. Activity displays progress bar (optional) and launches `LoginActvityUseCase.login()` method. Usecase processes the input, validates user data, performs authorization, loads additional data from server, saves authorization token to local storage, and, finally, returns user name to display on the screen. Activity hides progress bar and shows "Hello, $username" text after everything is finished.
+
+<h4>Continuation</h4>
+
+Sometimes things may go wrong. You will quickly find that both user login and order download may fail. Lack of Internet connection, server maintenance, expired authorization token, wrong password, invalid data filled by user, inconsistent data in user's profile - all this stuff has to be handled by your UseCase: as a minimum, you have to show error message to the user. The way how you will handle it depends of your application and you preferences. I personally like Exceptions mechanism for that purpose, but someone may prefer add more fields to `OrderData` class.
+
+In real life you may find cases different from the two described above. But, in fact, most of them come down to a simple set of operations:
+- take user input
+- show progress bar
+- process the action
+- hide progress bar
+- show the result (or error message)
+
+Process the action - this is what UseCase is responsible for.
+
+<h4>The great border</h4>
+
+Using UseCases gives you a one huge benefit. UseCase is both a border and bridge between your application UI and business logic (model).
+
+The way you organize everything to the right from the UseCase on this [picture](./arch.png) - database, business logic, network requests - is a developer's preference. In contrast, everything to the left from the UseCase (UI, in fact) - is a user's, or customer's, or designer's preference.
+
+For example, if you are developing and online shop application, you'd probably design the database scheme with normalized structure and best developers patterns. You'd put Shop Catalog items in one table, Users into another table, Orders into third table (and this table will probably have some references aka foreign keys to the two above), Order Items into fourth. Also you will have a separate storage for current user profile and his display settings. Similar story with network - you will use dozens of HTTP API calls, REST or RPC, maybe WebSockets, Protobuf, XML, SOAP, or whatever you like or need to use. If your smartphone is connected to a third-party hardware, for example to a bank card payment terminal, you'll have a separate bunch of packages describing the communication process with this terminal. As a developer, **you can design you model in the way developer feel the best**.
+
+In contrast, when we start with UI design, you're not so free. **The UI is designed in the way your user feels the best.** Depending of the business model in your company, understanding of "what is the best for users" can be declared by your project manager, customer, UI designer, marketing department, user reviews, beta-testers or someone else, but almost never by developer's team. And this is OK. For example, if we are talking about "Order screen" at your shop application, end user may want to see together order information, order items information, names and addresses of users who are involved into this order and payment terminal transaction status. All this stuff layout can vary depending on current user settings. And, be sure, next week designer will come with a new fresh feature to add to this soup.
+
+Nobody cares that to show all this information on one screen you have to combine dozens of database tables and, bunch of network requests and a pack of business logic algorithms. If your product manager wants to add a new label on the screen, and you're unable to add it just because the information for this label stays in a different database table, your manager never become happy.
+
+Here is where UseCase comes into force. UseCase is the right place to combine the dozens of databases, network requests and business logic units, required for just this particular screen. Here you adapt your model to your UI. Here is a bridge between developer's point of view and user's point of view.
+
+That's why it is quite important to have a separate UseCase for every screen in your app. Even if you see two screens are similar to each other, have a separate UseCase for every screen. If you feel that two or more screens have some common functionality, extract this functionality to common Logic object, reused by two or more UseCases, but never share a UseCase between two or more screens. Remember, next week your designer will come with a fresh new idea, and these two screens will not stay similar anymore.
+
+android non-android border
+
+sync calls
+
 
 ### Utilities
 
@@ -233,7 +328,7 @@ If using global-scope Entities as input/output, network classes should not rely 
 
 Very important: do not store any data inside the Network module. Public methods behavior should depend only on server state and method parameters passed. Do not store authorization tokens, cookies, other similar data in Network classes fields - use Storage module for that purpose. Network modules are designed for network processing, not for data storage.
 
-Network modukes are also responsible for error handling. This includes connection errors, response formatting errors, server errors - any of them should be handled accurately and translated into independent form. I personally prefer to throw Exceptions, but this is optional, you may provide specific Entity instead.
+Network modules are also responsible for network error handling. This includes connection errors, response formatting errors, server errors - any of them should be handled accurately and translated into independent form. I personally prefer to throw Exceptions, but this is optional, you may provide specific Entity instead.
 
 Retrofit note. (Retrofit is a commonly used network library). You can use Retrofit for request/response formatting, but consider the requirements above. Basic Retrofit features include: relying on Entity field names for formatting, storing a data (like auth tokens) inside the network module - be aware of using this features. Also, note that default Retrofit configuration does not raise any errors, if some required response fields are missing - it just silently puts null into your Entity. Considering that, I find Retrofit quite useless for Wooden architecture, and recommend using OkHttp and manual Json parsing instead.
 
@@ -304,11 +399,9 @@ When creating Local entites, you may create the as a completely new entity (with
 
 
 
-### Use Cases
-
-**TODO**
-
 -------------------------------------------------------
+
+### TODO
 
 application - fix cache
 application - add good weather settings
@@ -318,12 +411,16 @@ memstorage
 
 other utils - bluetooth, outer devices, external file access, etc
 
-entities
 
 usecases
 
+application arch picture finish with details
 
+container
 
+activities
+
+view model
 
 main public class define
 
