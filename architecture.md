@@ -287,6 +287,10 @@ In real life you may find cases different from the two described above. But, in 
 
 Process the action - this is what UseCase is responsible for.
 
+<h4>Use case is for data processing, not storing</h4>
+
+Use Cases are not allowed to store any data. You should not have any data fields inside UseCase class. Use Storage or Memory Storage (see corresponding sections) if you need to store someinthg.
+
 <h4>The great border</h4>
 
 Using UseCases gives you a one huge benefit. UseCase is both a border and bridge between your application UI and business logic (model).
@@ -301,11 +305,64 @@ Nobody cares that to show all this information on one screen you have to combine
 
 Here is where UseCase comes into force. UseCase is the right place to combine the dozens of databases, network requests and business logic units, required for just this particular screen. Here you adapt your model to your UI. Here is a bridge between developer's point of view and user's point of view.
 
-That's why it is quite important to have a separate UseCase for every screen in your app. Even if you see two screens are similar to each other, have a separate UseCase for every screen. If you feel that two or more screens have some common functionality, extract this functionality to common Logic object, reused by two or more UseCases, but never share a UseCase between two or more screens. Remember, next week your designer will come with a fresh new idea, and these two screens will not stay similar anymore.
+That's why it is quite important to have a separate UseCase for every screen in your app. Even if you see two screens are similar to each other, have a separate UseCase for every screen. If you feel that two or more screens have some common functionality, extract this functionality to common Logic object, reused by two or more UseCases, but never share a UseCase between two or more screens. Remember, next week your designer will come with a fresh new idea, and these two screens will not stay similar anymore. UseCase is your wiggle room for unexpected UI changes.
 
-android non-android border
+<h4>The border between OS dependent and non-OS dependent code</h4>
 
-sync calls
+Historically, Wooden Architecture was born in a Xamarin-based project.
+
+Xamarin is a crossplatform framework. It allows you to write crossplatform applications for iOS, Android, and some other applications, using C# language. Despite the fact it's base language on C#, Xamarin allows you to access native API - all the calls to native Android SDK for Android apps are proxied to Xamarin, and same thing is true for iOS SDK. At the same time, Xamarin has a set of its own APIs developer can use with the same code on both platforms (.NET common API, network calls, file storage access (file input-output streams or SQLite.NET library), etc).
+
+The days we developed our project (finances management app), we had the following strategy: the UI is designed and implemented independently for iOS and Android version. Business logic level, uncluding network and SQL database processing we shared between two platforms with a single code. Although UI for both OS was quite similar, iOS and Android version had significant differencies: styling details, screen sizes management, navigation behavior, notifications tuning, background operations processing, etc. For example, tab navigation control had tabs on the top for Android app and on the bottom for iOS app. At the same time basic UI content, basic user operations and, of course, finances calculation logic was the same for both platforms: the algorithm to calculate your income should not care about what OS you have on your smartphone.
+
+So, this is where UseCases were born. For every screen we had a separate UI for every platform: Activity for Android and ViewController for iOS. At the same time, for every screen we had a shared UseCase, which was responsible to provide a data (pre-calculated financial data) for particular screen. UseCase and everything to the right from it was treated as a crossplatform business logic zone. Everything to the left from UseCase was treated as OS-dependent code.
+
+![Xamarin app architecture preview](./xamarin.png)
+
+The picture above looks like simplified version of the grand wooden architecture [scheme](./arch.png), isn't it?
+
+This strategy raised the question: what code we should treat as "crossplatform", and what is OS-dependent? What are our business logic needs, and what are caprices of the operating system we should work with?
+
+When you write a pure non-crossplatform app using Java or Kotlin, the difference between "OS-Dependent" and business dependent is not so clear and obvious. Moreover, you have to use some Android APIs to access obviously non-OS-dependent features - for example, you need Android Context to access file storage. But it is reasonable to ask you same question as if you'd were developing a crossplatform app: what are our business logic needs, and what are the caprices of the operating system we should work with? UseCase may work as a helpful border between one and another.
+
+Here is my list of OS-dependent features which I keep to the left of UseCases. This list is not strict, and you may alter it on your choice (or throw the whole idea away =)
+
+- Activities lifecycle
+- Android UI: Views, etc.
+- Multithreading (see below)
+- Various Intent-dependent stuff: Services, Broadcasts, pushes and notifications, etc.
+
+See also section about Droid module.
+
+<h4>UseCase method are synchronous</h4>
+
+The important and unexpected (especially for Rx fans) consequence of the paragraph above: UseCase methods are synchronous by default (i.e. if you do not have very explicit reason to make them asynchronous). Same rule works for all the modules to the right from the UseCases: Logic, Storages and even Network calls.
+
+There are multiple advantages of this approach, so let me discuss them step by step.
+
+**Synchronous call are simpler to read and understand.** If your application is something more complicated that just a "styled web-browser", you may have a complicated logic. It is complicated by it's nature, for example, by nature of financial operations. There is no need to make them even more complicated by adding the asynchronous behavior
+
+**Synchronous calls are more stable**. When I perform a synchronous call, is guaranteed to return a result once and only once, or to throw one and only one exception. It is guaranteed by Java language. If you use immutable Entites (see Entites section), it is also guaranteed that result would not unexpectedly change after method call is finished.
+
+When I perform an asynchronous call, nothing is guaranteed regarding the callback. Callback maybe called once, twice, multiple times, or not get called at all. It may be called before method is returned or right after (or one hour after). It may be called with successful result or with error, or with both. It is a developer's care to make sure that Callback is called properly. Callback missed to call or called unexpectedly is a common source of bugs.
+
+**Multithreading in Android is an OS requirement.** Why do we have to deal with multithreading and async calls at all? Remember, we shouldn't perform long-running operations in main thread. Why? Because main thread is used for UI rendering, and we don't want the UI to "hang". In fact, **multithreading and async processing is a UI-level problem!** So, UI-level, or, to be more correct, Android-level is the most convenient place to care about this problem. Moreover, this problem can be solved with many ways: depending on the task you may want to use AsyncTask, JobScheduler, AlarmManager or to create a Service. All this stuff is definitely an Android-level stuff, and has nothing to deal with application data processing.
+
+**Async calls are often closely bound with Activity lifecycle**. When your activity gets destroyed or reconfugired during async call, you have to care somehow about it. And you'd better to care about it on Activity level, not on a Network level.
+
+**There is no need to be super-high-performant**. What??? Yes. Why do we use AsyncTask, or ThreadPool or brand-new-coroutines, why we cant just start a new Java Thread? They say: creating new Thread is a resource consuming operation. But, wait, what does it mean "resource consuming"? Thread stack size is about 8kb by default, and I have never seen starting new Thread took more than 1 ms (this is a minimal time unit I can measure with standard tools).
+
+Most of the asynchronous technologies, like thread pools, reactive objects, data streams, etc., come from server-side development. Server-side developers often meet significant performance issues, and they care about it too much. When your server received about 1 million requests per second, surely, 1 microsecond delay or 10 kb memory allocation per request can lead to dramatic consequences. But even here most of these consequences are to be tested experimentally.
+
+What is the most typical Android app use case? User clicks the button -> application shows progress bar -> processes data -> hides progress bar -> shows result to user. Even the most crazy user would not tap the smartphone screen more than 10 times per second. You can freely start a pure `new Thread()` for every tap, you will not see any performance difference on this rate (although I'd still suggest using thread pools or whatever, just to follow code-style).
+
+I think, the only case when you'll meet request rate from UI more than 10 times per second is a scrolling (particularly, ListView scrolling, if you perform a request per every list item shown). In this case you'll need some kind of asynchronous operation. But this case is quite rare. Then, next...
+
+The most time consuming operation on Android is network calls. If your operation takes more than 10 ms, most probably you perform a network call. But, wait, even if we make network calls asynchronous, is it still a bad practice to perform 20-30-100 calls per second! Some of our users have metered mobile Internet tariffs... Maybe we have to update our backend API?
+
+Finally, if you develop an application to use with Wi-fi only, and if you really need to run 100 network requests in parallel - running in parallel doesn't necessary mean asynchronous running. You can still run your requests in parallel and return from the method synchronously after all the requests are completed. Quite dumb solution, but the issue is not very smart too.
+
+Summary: 95% of android UseCases fit into the click -> processing -> result pattern, and they perfectly fit into synchronous calls from the point of performance. You still can adjust the rules for the remaining 5% - but you have to make it quick only after you made it right.
 
 
 ### Utilities
@@ -318,7 +375,7 @@ Main public class of the components of this module will typically contain a set 
 
 `ResponseData SendRequest(RequestParams params)`  
 
-Every such a method maps exacltly one request of the API you use. If you use an HTTP API, these methods are the only you need. If you use an API with permanent connection, like direct sockets, WebSockets or similar, you'll also probably need a methods like `connect()` and `disconnect()`, plus an event generator for incoming requests.
+Every such a method maps exactly one request of the API you use. If you use an HTTP API, these methods are the only you need. If you use an API with permanent connection, like direct sockets, WebSockets or similar, you'll also probably need a methods like `connect()` and `disconnect()`, plus an event generator for incoming requests.
 
 I do not recommend put all of the APIs you use into one component. You may have as many network components as you need. Typically, I group public methods into component based on their applicability, maximum 3-5 methods per component: one component will contain all the methods working with user login, another - all the methods processing shop catalog, third - everything about the order processing. But this is not a strict rule, so you may group methods in your component at you choice: as far as most of the API calls are independent from each other, grouping doesn't matter a lot. If you use multiple backends for your needs (for example, your own backend + Facebook API), you may also consider that for grouping.
 
