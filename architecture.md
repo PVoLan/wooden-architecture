@@ -478,6 +478,8 @@ activities
 
 view model
 
+table of contents? Chapters?
+
 main public class define
 
 Public component methods define
