@@ -433,12 +433,13 @@ Memory Storage + Storage represents _application state_. At every moment applica
 
 <h4>Other utilities</h4>
 
-Depending on the nature of your app, you may need other kinds of utilities. Any entire, complete part of functionality which depends on Entities and (typically) some third-party software/hardware is a good candidate to be a utility. Make sure your utility does not contain too much of "business rules" - otherwise yo may want to extract some business rules to Logic tier.
+Depending on the nature of your app, you may need other kinds of utilities. Any entire, complete part of functionality which depends on Entities and (typically) some third-party software/hardware is a good candidate to be a utility. Make sure your utility does not contain too much of "business rules" - otherwise you may want to extract some business rules to Logic tier.
 
 Here are some examples of utilities:
 
 - Bluetooth connections (there is no big difference between bluetooth and tcp networking, actually)
 - Hardware driver connecting your application to USB device
+- External document/file access
 - Third party library wrapper (including NDK one), which should depend on Entities and is unreasonable to put in Tools module
 
 
@@ -527,6 +528,36 @@ That's why in general UseCases are allowed to bypass Logic tier(s) and access to
 
 Choose the strategy of "which Logic tier(s) are allowed to bypass" depending on your application nature.
 
+### Tools
+
+Sometimes you may feel that programming language or framework you use is not perfect. What if the Java or Android SDK would contain %this_cool_feature%?
+
+Tools module is not a tier. It is just a set of tools - helpers, general purpose classes - used to simplify everyday developer's life. Getting tried of useless Log tags? Calendar-to-String conversion takes three lines of boilerplate code? Find yourself repeating code to perform conditional search over a List? This is what tools are used for. Put some syntax sugar to your cup of code.
+
+Here are some examples of Tools I often use:
+- Custom logger. I never use android log tags and levels, so  
+`ALog.log("Hello!")`  
+looks more smart in my code than   
+`Log.i(LOG_TAG, "Hello!")`
+- JSON tool. I'm generally fine with `JSONObject` API, but I often want parser to throw exception if `null` value was found. `JSONObject.getString()` will throw if no key found, but will return null if key with `null` value was found, what is often inappropriate when parsing network responses with mandatory fields.
+- Calendar helper. Few line of code to replace
+```java
+SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+simpleDateFormat.setCalendar(calendar);
+String formattedDate = simpleDateFormat.format(c.getTime());
+```
+with
+```java
+String formattedDate = CalendarHelper.format(calendar, format);
+```
+makes code much cleaner
+
+And others. Surely, the set of Tools to use may differ depending on the task and developer's personal prefernces. Why not using popular libraries instead? Well, this is my preference - I don't want to add a new dependency to the project if problem can be solved just with a few lines of code.
+
+Any other module in your code (including Global Entities) can depend on Tools. Tools are treated as a "language improvements", so they can be used application-widely. Tools module itself is independent - it cannot have a reference to other modules (but it can use third-party libraries if needed).
+
+What is the main difference between Tools and other modules? Tool has no idea about what project it is used in. If I have a code snippet which can be easily copy-pasted from my medical application to cargo taxi application I will develop next month, as well as into musical player app, this is a good candidate to become a Tool. Otherwise I have to consider a Logic component instead, Utility, or something similar
+
 
 -------------------------------------------------------
 
@@ -536,17 +567,13 @@ application - fix cache
 application - add good weather settings
 
 
-memstorage
-
-other utils - bluetooth, outer devices, external file access, etc
+container
+subutility error
 
 
 
 application arch picture finish with details
 
-
-container
-subutility error
 
 logic enchanecements image
 

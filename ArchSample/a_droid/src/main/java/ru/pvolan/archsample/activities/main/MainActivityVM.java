@@ -1,15 +1,12 @@
 package ru.pvolan.archsample.activities.main;
 
-import android.os.AsyncTask;
-
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import ru.pvolan.archsample.R;
 import ru.pvolan.archsample.application.SampleApp;
-import ru.pvolan.archsample.usecases.exception.UCException;
 import ru.pvolan.archsample.usecases.main.MainScreenUseCase;
-import ru.pvolan.tools.async_task.AsyncTaskEx;
+import ru.pvolan.uitools.async_task.AsyncTaskEx;
 import ru.pvolan.tools.ex_res.ExceptionalResult;
 import ru.pvolan.tools.string.StringHelper;
 import ru.pvolan.uitools.live_data.MutableLiveDataCreator;
