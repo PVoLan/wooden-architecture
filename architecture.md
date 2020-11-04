@@ -221,9 +221,11 @@ Use Cases, probably, is the most important detail of the Wooden architecture. In
 
 Typically, one UseCase is created for every particular application screen (i.e. one UseCase per one Activity, or one UseCase per Fragment, if you use Fragments). The main UseCase purpose is to provide and process screen data in a way, most suiatble for particular screen.
 
+UseCase may depend on unlimited number of Logic, Utility (depending on Logic complexity, see Logic section) and Tools objects. UseCase is independent from other UseCases.
+
 UseCase class can contain multiple public methods. Every method is responsible for a particular user action on the screen.
 
-You screen (Activity or Fragment) is not allowed to access the application data other than via it's UseCase. You should never access the network, storage, or application logic directly from your UI. **UseCase is the only source of the data for the related UI screen.**
+You screen (Activity or Fragment) is not allowed to access the application data other than via it's UseCase. You should never access the network, storage, or application logic directly from your UI. **UseCase is the only source of the data for the corresponding UI screen.**
 
 In typical Android application, two basic user action cases can be met.
 
@@ -289,7 +291,9 @@ Process the action - this is what UseCase is responsible for.
 
 <h4>Use case is for data processing, not storing</h4>
 
-Use Cases are not allowed to store any data. You should not have any data fields inside UseCase class. Use Storage or Memory Storage (see corresponding sections) if you need to store someinthg.
+Use Cases are not allowed to store any data. You should not have any data fields inside UseCase class. Use Storage or Memory Storage (see corresponding sections) if you need to store something.
+
+This simple rule is a first step to prevent your UseCase from becoming a God object.
 
 <h4>The great border</h4>
 
@@ -364,8 +368,11 @@ Finally, if you develop an application to use with Wi-fi only, and if you really
 
 Summary: 95% of android UseCases fit into the click -> processing -> result pattern, and they perfectly fit into synchronous calls from the point of performance. You still can adjust the rules for the remaining 5% - but you have to make it quick only after you made it right.
 
-
 ### Utilities
+
+Utility is a relatively independent code module, implementing entire piece of functionality. Typically this functionality may contain some piece of what developers call "business rules", but not too much - one utility is possible to use in multiple business situations.
+
+Utilities may depend only on Entities and Tools. They never depend on other objects (including other utilities).
 
 <h4>Network</h4>
 
@@ -414,13 +421,34 @@ The Storage tier is the only place where you should store your data on disk. Do 
 
 By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance. As a minimum, put a `version=1` key-value to your storage.
 
-### Entites
+<h4>Memory storage</h4>
+
+As you may rememeber, UseCases (and Logic) objects are now allowed to store any data - neither on disk, neither in memory. But sometimes you need to keep some data in memory. This is where memory storage comes to play.
+
+Memory storage is just like Storage, but in memory. It will have `readXXX()` and `saveXXX()` methods, but it will store data into class field instead of file or SharedPreferences. It is not allowed to contain any logic. You can have multiple Memory Storages, and group stored data by usage. Multiple UseCases can access one Memory Storage, and vice versa. All the other Storage rules also apply to Memory Storage.
+
+Obviously, Memory srorages are not required to care about migrations.
+
+Memory Storage + Storage represents _application state_. At every moment application behavior will depend only on these two modules.
+
+<h4>Other utilities</h4>
+
+Depending on the nature of your app, you may need other kinds of utilities. Any entire, complete part of functionality which depends on Entities and (typically) some third-party software/hardware is a good candidate to be a utility. Make sure your utility does not contain too much of "business rules" - otherwise yo may want to extract some business rules to Logic tier.
+
+Here are some examples of utilities:
+
+- Bluetooth connections (there is no big difference between bluetooth and tcp networking, actually)
+- Hardware driver connecting your application to USB device
+- Third party library wrapper (including NDK one), which should depend on Entities and is unreasonable to put in Tools module
+
+
+### Entities
 
 Entities are data objects. They represent a pieces of data which components transfer to each other as method parameters and return values. All the public component methods should have only entities and collections of entities as a parameters and return values.
 
 Entites are POJO's (Plain Old Java Objects). They do only contain data. They do not contain any logic, they only store, but do not _process_ any data. They have fields, and have no methods, excepting getters, constructors, and (see below) setters.
 
-As a rare exemption, short pure methods are allowed, if they do not change entity fields and their behavior is affected only by entity fields. For example, if you have `Order` entity, which contains a list of `OrderItem` entites, you may find quite handy to add `getItemCount()` method to `Order` class. But in case of any doubts prefer to put data processing methods to Logic classes.
+As a rare exemption, short pure methods are allowed, if they do not change entity fields and their behavior is affected only by entity fields. For example, if you have `Order` entity, which contains a list of `OrderItem` entities, you may find quite handy to add `getItemCount()` method to `Order` class. But in case of any doubts prefer to put data processing methods to Logic classes.
 
 Although is is not 100% strict, I highly recommend you to use only _immutable_, read-only entities. In this case, no setters are allowed in Entity classes. Also, although Java does not have a good support for that ([here is an option](https://docs.oracle.com/javase/1.5.0/docs/api/java/util/Collections.html#unmodifiableList(java.util.List))), I recommend you to treat any Entity collections as read-only. Using immutable entities and lists makes you sure, that after you receive the Entity as a return value from some method, no one will unexpectedly change it. If you need to modify entity - just create a new one!
 
@@ -432,11 +460,11 @@ Global entities are stored in Entities module and are used over all application.
 
 There is a constraint here, although. Global Entities should depend on **nothing**. Entities gradle module does not have any dependencies, excepting `Tools` module. They should not rely on network and storage.
 
-There is a common pattern to use some third-party tools, like Retrofit (commonly used network library), Room (commonly used SQL databases library), or similar, to automatically convert POJO so JSON API request or SQLite tables, based on entity field names. This is **strictly forbidden** for global Entites. Even when such a conversion does not cause a gradle dependency, this causes an implicit binding between entity and network request/database format. As far as global entities are used globally, this  binding can have critical consequences.
+There is a common pattern to use some third-party tools, like Retrofit (commonly used network library), Room (commonly used SQL databases library), or similar, to automatically convert POJO to JSON API request or SQLite tables, based on entity field names. This is **strictly forbidden** for global Entities. Even when such a conversion does not cause a gradle dependency, this causes an implicit binding between entity and network request/database format. As far as global entities are used globally, this binding can have critical consequences.
 
 Let me repeat again. `@SerializedName` (a common Retrofit pattern) is forbidden when using Global entities. But even if by occasion you Entity field names match API JSON keys, you must provide manual parsing from JSON to Entity and back. Same story for Room - your entity is not a room `@Entity`, and you should never expect them to be same.
 
-The key idea is that if backend developer would like to rename some API field, this rename should not affect (i.e. should cause NO code changes to) your Entity and should not affect (i.e. should cause NO code changes to) your UI classes. Similar to, if one day you would like to slightly refactor your Room database, this refactoring should be limited to Storage module as long as possible.
+The key idea is that if backend developer would like to rename some API field, this rename should not affect (i.e. should cause NO code changes to) your Entity and should not affect (i.e. should cause NO code changes to) your UI classes (which use this Entity). Similar to, if one day you would like to slightly refactor your Room database, this refactoring should be limited to Storage module as long as possible.
 
 <h4>Local entities</h4>
 
@@ -454,6 +482,50 @@ Because of the reduced visibility, independence constraint for Local entities is
 
 When creating Local entites, you may create the as a completely new entity (with newly created fields. for ex. `MainScreenUseCase.ForecastItem`), or create is as a wrapper over another Entity (global or local - example is `ForecastStorage.CityForecastCache`, which is a wrapper over `CityForecast`). As far as all Entities are immutable, both approaches are fine, but when using last one, make sure your wrapper does not disclose unnecessary information of inner object - inner object may relate to another tier.
 
+### Logic
+
+Logic is an optional tier, used for relatively complicated applications.
+
+If your application is as simple as "open screen - load data from network - show data on the screen as is", UseCase will perfectly succeed the task, and no Logic tier is required.
+
+But, as your application grows, one of the following (or both) may happen:
+- You will find that multiple UseCases require same data, or perform same operations. Same means "which is intended to stay the same when your application is going to change"
+- You will find particular UseCase too large, and may want to extract some logic from this UseCase to independent module.
+
+Here Logic comes to play.
+
+Logic components is what developers often call "business logic", but it is not required to stay so. There is no strict definition of what Logic component is - it can be any piece code which is expected to be reused more or less application-widely. Logic's nature may be conditioned either by business requirements (statistics calculation algorithm or user data validations) either by developer's concerns (caching strategy or server data synchronization algorithm).
+
+Similar to other tiers, you may have multiple Logic components. Like UseCases, Logic components can depend on Entities, Utilities and Tools. At a first glance, Logic components should not depend on each other, but this rule may be canceled, see below. Some Logic objects may depend on nothing (imagine tax calculation algorithm in financial application, whose result depends only on parameters passed).
+
+Like UseCases, Logic objects are use for data processing, and are not allowed to store any data. Use storages, if you need to store something.
+
+Like UseCases (and like all Utilities, though), Logic component methods are highly recommended to be synchronous as much as possible. Logic methods may be really complicated, and we should avoid unnecessary complexity.
+
+Logic objects are responsible to care about errors which can happen during the algorithm is running - either via handling, either via rethrowing it to a higher level.
+
+<h4>When logic becomes complicated</h4>
+
+If your application grows even more, you may find yourself unable to fit into one Logic tier. Some of your Logic components become depending on the on the Logic components, and overall processing becomes complicated.
+
+There is no universal solution for this situation, and you have to adjust the Wooden Architecture to your case. But the key concept should stay the same, most important one is a "no circular dependencies" rule. You may want to reorganize Logic component in any way you'd prefer, but your organization should guarantee that no circular dependencies is allowed between Logic components and other components.
+
+Try to limit your reorganization to Logic tier. You may want to split Logic module into two or more Logic modules, or reorganize tiers structure inside source Logic module. But do not mix Logic components and Utilities, and avoid Logic to store any fields.
+
+Here are possible strategies of how you can deal with complicated Logic. Use one, or mix multiple, or create your own at your choice
+- Introduce multiple logic tiers, so that upper-level tier would depend on lower-level
+- Introduce stack of logical tiers. This is similar to previous one, but only upper level logic will depend on Utilities. You may need a good dependency injection skill in that case, and the whole concept look similar to Clean Architecture approach
+- Let Logic components contain sub-components, which will reduce complexity on the parent component. Subcomponets scope is limited to parent component.
+
+<h4>Bypassing Logic tier(s)</h4>
+
+If you'll look at grand Wooden Architecture [scheme](./arch.png), you may find that Logic tier is different from the others. This is the only tier (or tiers, if you have multiple Logic tiers) which is allowed to be omitted, fully or partially.
+
+Well, if 80% of your application screens looks like "open screen - send network request - show data received on the screen", but you still need a Logic tier due to rest of 20% screens, there is no sense to wrap every network request into a separate Logic component. In that case, 80% of your Logic components will just re-call corresponding Network component. That's a boilerplate.
+
+That's why in general UseCases are allowed to bypass Logic tier(s) and access to Utilities directly. But you may change this rule depending on your application. Sometimes, when the application structure is complex, it makes sense to force all the UseCases to access Logic level, even if in fact only one network call is required. It will increase boilerplate, but simplify and regularize dependencies.
+
+Choose the strategy of "which Logic tier(s) are allowed to bypass" depending on your application nature.
 
 
 -------------------------------------------------------
@@ -472,7 +544,11 @@ other utils - bluetooth, outer devices, external file access, etc
 
 application arch picture finish with details
 
+
 container
+subutility error
+
+logic enchanecements image
 
 activities
 
@@ -481,6 +557,8 @@ view model
 table of contents? Chapters?
 
 main public class define
+
+network is not a repo
 
 Public component methods define
 
