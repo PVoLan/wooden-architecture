@@ -558,6 +558,108 @@ Any other module in your code (including Global Entities) can depend on Tools. T
 
 What is the main difference between Tools and other modules? Tool has no idea about what project it is used in. If I have a code snippet which can be easily copy-pasted from my medical application to cargo taxi application I will develop next month, as well as into musical player app, this is a good candidate to become a Tool. Otherwise I have to consider a Logic component instead, Utility, or something similar
 
+### Application container
+
+Okay, we have defined most of the modules and components we use in the architecture. Now it's time to assemble them all together. This is what Container is used for.
+
+There is one instance of Container in the application, it is created and stored in Application object. In Container's constructor all the UseCase, Logic and Utility objects are created and connected to each other. Typically, exactly one instance if each component is created.
+
+Container is created inside `Application.onCreate()` method. Make sure Container's and components' constructors  do nothing rather than object instantiations and reference assignments: `onCreate()` must be quick, and instantiations and assignments are quick enough even if you have thousands of components.
+
+Only UseCase components are publicly visible from outside of Container, other components are private. Any Activity or Fragment can easily access Application object via static reference, then access Container, then access corresponding UseCase to retrieve data and or perform particular action.
+
+Container constructor code, like a Table of Contents, briefly represents the whole application model structure and architecture, lists all the components used and connections between. It is quite easy to review this code to make sure your components keep properly ordered on high level.
+
+<h4>Dependency Injection</h4>
+
+In fact, Container is what developers often call DI-container, and the assembling procedure is what is called "manual dependency injection". Although we have not used interfaces for our components, and our dependencies are quite tight due to that, it can be easily fixed. If your application requires, you can easily add interfaces and replace direct references between components with interface reference. If you'll also slightly regroup the components among the modules and invert some dependencies, you can easily refactor Wooden Architecture to classic Clean Architecture. Isn't that nice? In fact, I think that pure Clean Architecture is too complicated and not necessary for average Android Application. But if your application changes over time, you can adapt with the requirements.
+
+When someone says "dependency injection", some Android developers hear "Dagger". Why do not use Dagger or similar tool here? Well, first, as I already mentioned, I don't want to use third-party library if I can solve the task with few lines of code. Second, now my components have minimal number of dependencies: adding classic `@Inject` annotations will add unnecessary Gradle dependency to components' configurations. Of course, you can use Dagger modules instead of `@Inject` annotation, but modules are usually treated as advanced level of Dagger usage. Also, modules configuration is not going to take less lines of code than Container class implementation.
+
+Despite to that, one day you may find Dagger useful: for example, if you will face with necessity to implement multiple configurable Container variants for various versions of your app. Then you are still able to replace manual Container with Dagger.
+
+<h4>Gradle modules note</h4>
+
+Container and Application objects are placed in separated gradle module. Why? Main reason for that, again, is dependency management. Container has to refer to all right-placed gradle modules (UseCases, Logic, Utilities) in order to be able to instantiate each of them. At the same time, we want Droid module to depend only on UseCases module, but not to Logic and Utilities, in order to prevent unwanted access from Activity. But if you feel yourself (and rest of your team) willful enough to refrain from direct access from Activity to Network withour gradle restrictions, you can merge Droid and App gradle modules into one.
+
+Note that Application class is non-accessible from components (UseCases, Logic, Utilities). Obviously, there is a reason for that: lower-level tiers should not be able to access Application, as far as it makes them able to access UseCases via Container. But utilities often need application Context - for example, it is required to access file storage. It is ok to implicitly pass Application object as a Context via component constructor.
+
+<h4>One more tier?</h4>
+
+Attentive reader, who takes a look at the Container class in the Sample App code, may notice `DBInstance` object passed to ForecastStorage. Wait, you have said that Storage objects should depend on nothing rather than Tools and Entities, what is that? A mistake?
+
+Formally, this object was not declared before. In fact, this object contains a Room instance which is used by ForecastStorage. If I'd add one more storage with database functionality (CitiesStorage, for ex.), I'd most probably pass same DBInstance reference to this new storage. This was not declared on grand scheme to keep things simple.
+
+Formally speaking, what we have here is a some kind of subutility - utility, used by multiple other utilities. If we'd stay formally exact, we had to introduce one more tier to the right from Utilities section, and put DBInstance there. I've just omitted this detail in grand scheme to make it simpler. Similar example is ExecuteHelper class in Network module - although it is not passed as a parameter as for now, it would be most probably shared between multiple APIs in future.
+
+![Subtier](./subtier.png)
+
+Note that DBInstance cannot be placed to Tools package, as far as it defines some project-unique stuff, like table names and columns (what in fact Room's `@Entity` is). Similarly, ExecuteHelper (together with RequestHelper and ResponseProcessor) is not just a tool for HTTP requests format, but defines project-specific things like base URL, common request headers and HTTP errors parsing algorithm.
+
+Although this new "tier" does not exactly meet grand scheme, it still perfectly fits higher-level architecture concepts. It meets "no circular dependencies" rule, meets global tiers concept, and does not break other concepts. This "issue" is an example of how Wooden Architecture can be extended to meet various requirements and environment.
+
+
+### UITools
+
+Oh, this is pretty simple. UITools is just like tools, but for UI. Only Droid module can depend on UITools - there is no need for UseCase to know something about UI, isn't it? UITools can depend on Tools and nothing more.
+
+Various commonly used, project-independent UI tweaks are placed here. Like with Tools, these tweaks are kept project-independent. Note that if particular UITool has a project-branded typeface or color - this is not a Tool, such object should be placed in Droid module.
+
+
+### Droid
+
+*These aren't the droids you're looking for...*
+
+Finally, here we come to Activities, Views, Services and other "true-Android" stuff.
+
+<h4>First, why "Droid"? Couldn't you find a better name, C-3PZ, for ex?</h4>
+
+Well, this tier could be named as "UI", but generally it is not true: although about 80% of code here really relates to UI, such things as Services and BroadcastReceivers are also placed here, and they have very little relation to UI itself.
+
+Second, as I have noticed above, this Architecture was born from Xamarin project. So originally we had two modules to the left of UseCases: module named "Android" module for Android and "iOS" module for iOS, respectively. This naming was fine in a crossplatform context, and it keeps it's sense even in a single-platform app.
+
+But there is a small trouble here. When you create a gradle module, it is a good practice for root Java package to keep module's name, like `ru.pvolan.sampleapp.android`. This `android` package name often interferes with original Android packages (`android.widget.*`, `android.app.*` and others), it makes AndroidStudio's Intellisense to occasionally mix them. So we have required a more unique name, that's why `android` became `droid`.
+
+If you have better suggestions to name this packages, please send me an idea (=
+
+<h4>So, where is the power?</h4>
+
+The full description of the UI and other Android-related approaches will require a separate chapter, and once upon a time I will write it, maybe. Here I will be brief.
+
+Okay, first, `Droid` module is where your Activities, Services, BroadcastReceivers and ContentProviders (if you have any) will be placed. In addition, all your Fragments and Views are also here. In other words, Droid contains public app-level interfaces: everything what user and/or Android OS uses to communicate with your application.
+
+Every Activity, Service and BroadcastReceiver has zero or one corresponding UseCase. Activity requests application data from corresponding UseCase and shows it to user. In fact, all the hard work is already done by the UseCase, Activity's task is just to render data and handle lifecycle changes properly.
+
+Activities often use `ViewModel` object from Android API's to handle configuration changes properly. In that case, ViewModel becomes a mediator between Activity and UseCase - Actvitiy requests data from ViewModel, and ViewModel requests data from UseCase.
+
+Services and BroadcastReceiver are not needed to care about configuration changes, so they usually request UseCase directly.
+
+Fragments (if used), being an active lifecycle players, work similar to Activity: separate UseCase is created for every Fragment, and Fragment can retrieve application data from UseCase (directly or via ViewModel).
+
+In contrast to Fragment, Views are passive. View has no idea about application lifecycle, that's why UseCase is never created for View. View's interaction with the rest of the app should always be mediated via Activity or Fragment: Activity (or Fragment) should request data from it's own UseCase and set data to View, if needed.
+
+<h4>Who is the captain?</h4>
+
+Well, we have our ship assembled together and almost ready for departure. Ship crew (UseCases, Logic, Utilities, etc) are placed on their positions, communication lines between deckhands are properly set. Who will drive the team over the sea?
+
+Although this question can be answered differently for various systems, it is highly important for Android due to Android's architecture.
+
+You know that Android application can be killed when it is in background. More exactly speaking, it can be killed any time when it is not in foreground, i.e. nothing of the following is met:
+- There is an Activity on the screen
+- There is a Service (prefferably foreground) working
+- BroadcastReceiver or ContentProvider is handling a request right now.
+
+Like a ship cannot sail without a captain, Android application, in fact, cannot work without Activity or Service or BroadcastReceiver or ContentProvider alive. **Activity/Service/BroadcastReceiver/ContentProvider is the captain among all other application components**.
+
+You will have dozens of UseCases, Utilities, Logic and other classes on your code. Despite the huge volume of this code, all these components are passive. **No any action should be performed in your application should be performed without a *command* from Activity or Service**
+
+It is a common mistake for Android applications to create an active object, performing some useful work and firing event over whole application, and leave it somewhere in memory alone. For example, if you application has to create and keep WebSocket connection, developers often create a WebSocket object, add a some kind of  EventBus listener to it and just leave this connection abandoned. It causes unpredictable behavior in case of application being killed, or second connection instance has been occasionally created.
+
+Any procedure in your application: sending user's request, keeping a permanent connection, or some kind of background processing - should be attached to a concrete Activity or Service (or BroadcastReceiver for some short-period activities). You have to start this procedure only when Activity/Service is started, and properly shutdown this procedure when Activity/Service is paused/destroyed.
+
+You may find that we have multiple captains on this ship. Well, it is dangerous in real life, but it is quite ok for software processing. A real person, being a deckhand, cannot do two jobs at the time. But in software development one component can successfully perform two jobs in separated threads. But, if this is your case, you may need to think about multi-thread synchronization. For example, if you have both Activity visible on screen and background Service performing some job, and both are using same Storage, you may need to guard Storage methods with `synchronized` operator, or develop even more accurate synchronization. Also keep in mind that in some cases you may have multiple Activities active at the same time.
+
+
 
 -------------------------------------------------------
 
@@ -565,12 +667,15 @@ What is the main difference between Tools and other modules? Tool has no idea ab
 
 application - fix cache
 application - add good weather settings
+application - network interface and fake
+
+
 
 
 container
 subutility error
 
-
+sync calls update to async (????)
 
 application arch picture finish with details
 
@@ -578,6 +683,8 @@ application arch picture finish with details
 logic enchanecements image
 
 activities
+
+conclusion?
 
 view model
 
@@ -594,6 +701,8 @@ android - activity is a captain
 multiple captains in a software
 
 disclaimer - architecture is a journey
+
+gradle build time note
 
 # Data separately, algorithms separately
 
