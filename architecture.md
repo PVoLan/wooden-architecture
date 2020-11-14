@@ -638,6 +638,10 @@ Fragments (if used), being an active lifecycle players, work similar to Activity
 
 In contrast to Fragment, Views are passive. View has no idea about application lifecycle, that's why UseCase is never created for View. View's interaction with the rest of the app should always be mediated via Activity or Fragment: Activity (or Fragment) should request data from it's own UseCase and set data to View, if needed.
 
+Activities are designed independently from each other. You should never keep implicit or explicit reference from one Activity to another, and, in general, Activity should know nothing about other Activities (just like components in one tier should know nothing about each other). But it is fine to send `startActivity` Intents (with parameters, if needed) from one Activity to another - at least if your UI navigation is not too complicated. Similarly, Fragments are designed independent from other Fragments and Activities in general, but a minimal data transfer between them is possible.
+
+These topics would be described in detail later in a separate chapter.
+
 <h4>Who is the captain?</h4>
 
 Well, we have our ship assembled together and almost ready for departure. Ship crew (UseCases, Logic, Utilities, etc) are placed on their positions, communication lines between deckhands are properly set. Who will drive the team over the sea?
