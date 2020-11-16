@@ -520,6 +520,8 @@ Here are possible strategies of how you can deal with complicated Logic. Use one
 - Introduce stack of logical tiers. This is similar to previous one, but only upper level logic will depend on Utilities. You may need a good dependency injection skill in that case, and the whole concept look similar to Clean Architecture approach
 - Let Logic components contain sub-components, which will reduce complexity on the parent component. Subcomponets scope is limited to parent component.
 
+![Complex logic variants](./complex_logic.png)
+
 <h4>Bypassing Logic tier(s)</h4>
 
 If you'll look at grand Wooden Architecture [scheme](./arch.png), you may find that Logic tier is different from the others. This is the only tier (or tiers, if you have multiple Logic tiers) which is allowed to be omitted, fully or partially.
