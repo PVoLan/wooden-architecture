@@ -38,21 +38,25 @@ But this concept is not limited to OOP-object. If ```methodA()``` calls ```metho
 You can also treat "object A" as any module of you application, such a gradle module, running instance, particular server, or something.
 
 
-## Tiers
+## Tiers and components
 
-So, to make sure no circular dependencies will be presented, whole application is splitted into several tiers (some sources also call it "layers"). Concept is similar to multitier architecture, but particular tier roles are some different from [classic structure](https://en.wikipedia.org/wiki/Multitier_architecture).
+So, to make sure no circular dependencies will be presented, whole application is splitted into several **tiers** (some sources also call it "layers"). Concept is similar to multitier architecture, but particular tier roles are some different from [classic structure](https://en.wikipedia.org/wiki/Multitier_architecture).
 
 ![](./tiers.png)
 
-Typical Android application has 4-5 tiers, but you may have more, if you need. Every tier contains one or more components. For Android application every component is represented with some Java object/class, typically, but not limited to. Typically every component is placed into separate Java-package. There is only one "main public" class in this package (see below).
+Typical Android application has 4-5 tiers, but you may have more, if you need. Every tier contains one or more **components**.
 
-Sometimes it is possible for a component to consist of two or more Java classes/objects. In this case make sure that only one "main" class/object has public visibility. Other classes in a components are threated as "helper" classes and should be package-private (or at least you should think about them as a package private). Helper entity classes/object are allowed to be public (see Entities section below). If you don't understand this paragraph, just ignore it for a while ans use a "one component = one class/object" as a rule
+Every component is represented with some Java object/class. Typically every component is placed into separate Java-package.
 
-There are general rules about components:
+Sometimes it is possible for a component to consist of two or more Java classes/objects. In this case the component *must* be placed in separate package, and only one "main" class/object in this package has public visibility. Other classes in a components are threated as "helper" classes and should be package-private (or at least you should think about them as a package private). Local entity classes/object contained in the component, are also allowed to be public (see Entities section below). If you don't understand this paragraph, just ignore it for a while ans use a "one component = one class/object is a separate package" as a rule.
+
+Here and below word *component* is threated as a reference to either a package either a "main public class" of this package. Public methods of this "main public class" are called *public component methods* or *component methods*.
+
+There are general rules about how components are placed into tiers:
 - Different components inside of one tier are independent of each other. They don't even know about each other's existence. So, ```Component 1.1``` has no idea about ```Component 1.2```, and vice versa
 - Any component of a tier may depend on any components of next tier. ```Component 1.X``` may depend on any ```Component 2.X```. Any ```Component 1.X``` may call any methods of ```Component 2.X```
 - Any tier has no idea about previous tier. Tier 3 components doesn't depend on any of Tier 2 or Tier 1 components and have no idea about their existence.
-- Typically, Tier 1 components should have no direct access to Tier 3 components. So, any tier should access only next tier, but not the next after next. There are some exceptions from this rule, see below.
+- Typically, Tier 1 components should have no direct access to Tier 3 components. So, any tier should access only next tier, but not the next after next. The only exception is allowed for Logic tier, see Logic section.
 
 
 ## Captain and a deckhand
@@ -91,7 +95,7 @@ class A {
 }
 ```
 
-A is the captain, and it sends _commands_ to B. B can use a Listener pattern (or Callback, or Observer, or something you prefer) to _report_ something useful to A
+A is the captain, and it sends _commands_ to B. B can use a Listener pattern (or Callback, or Observer, or something you prefer) to _report_ something useful to A.
 
 
 ```java
@@ -122,11 +126,12 @@ class B {
   }
 
 
-  public interface BListener {
-    void onSomethingHappened()
-  }
+    public interface BListener {
+      void onSomethingHappened();
+    }
 }
 ```
+
 
 ```java
 import com.somepackage.B;
@@ -148,6 +153,7 @@ class A {
     //Analyze the situation here and provide new commands, if needed
   }
 }
+
 ```
 
 ## Keep data separated from processing
@@ -231,7 +237,7 @@ You screen (Activity or Fragment) is not allowed to access the application data 
 
 In typical Android application, two basic user action cases can be met.
 
-<h4>Case 1</h4>
+#### Case 1
 User opens a screen or some other event happens. Some data has to be loaded and shown on this screen. Then you will have a method in corresponding UseCase something like that
 
 ```java
@@ -261,7 +267,7 @@ class OrderItem {
 }
 ```
 
-<h4>Case 2</h4>
+#### Case 2
 User fills a form and clicks "Do the magic" button on the screen. Some action has to be performed on this click, and a result has to be shown to user. For example:
 
 ```java
@@ -278,7 +284,7 @@ class LoginActvityUseCase {
 
 User enters login and password and clicks "Login" button on the screen. Activity displays progress bar (optional) and launches `LoginActvityUseCase.login()` method. Usecase processes the input, validates user data, performs authorization, loads additional data from server, saves authorization token to local storage, and, finally, returns user name to display on the screen. Activity hides progress bar and shows "Hello, $username" text after everything is finished.
 
-<h4>Continuation</h4>
+#### Continuation
 
 Sometimes things may go wrong. You will quickly find that both user login and order download may fail. Lack of Internet connection, server maintenance, expired authorization token, wrong password, invalid data filled by user, inconsistent data in user's profile - all this stuff has to be handled by your UseCase: as a minimum, you have to show error message to the user. The way how you will handle it depends of your application and you preferences. I personally like Exceptions mechanism for that purpose, but someone may prefer add more fields to `OrderData` class.
 
@@ -297,7 +303,7 @@ Use Cases are not allowed to store any data. You should not have any data fields
 
 This simple rule is a first step to prevent your UseCase from becoming a God object.
 
-<h4>The great border</h4>
+#### The great border
 
 Using UseCases gives you a one huge benefit. UseCase is both a border and bridge between your application UI and business logic (model).
 
@@ -313,7 +319,7 @@ Here is where UseCase comes into force. UseCase is the right place to combine th
 
 That's why it is quite important to have a separate UseCase for every screen in your app. Even if you see two screens are similar to each other, have a separate UseCase for every screen. If you feel that two or more screens have some common functionality, extract this functionality to common Logic object, reused by two or more UseCases, but never share a UseCase between two or more screens. Remember, next week your designer will come with a fresh new idea, and these two screens will not stay similar anymore. UseCase is your wiggle room for unexpected UI changes.
 
-<h4>The border between OS dependent and non-OS dependent code</h4>
+#### The border between OS dependent and non-OS dependent code
 
 Historically, Wooden Architecture was born in a Xamarin-based project.
 
@@ -340,7 +346,7 @@ Here is my list of OS-dependent features which I keep to the left of UseCases. T
 
 See also section about Droid module.
 
-<h4>UseCase methods are synchronous</h4>
+#### UseCase methods are synchronous
 
 The important and unexpected (especially for Rx fans) consequence of the paragraph above: UseCase methods are synchronous by default (i.e. if you do not have very explicit reason to make them asynchronous). Same rule works for all the modules to the right from the UseCases: Logic, Storages and even Network calls.
 
@@ -376,7 +382,7 @@ Utility is a relatively independent code module, implementing entire piece of fu
 
 Utilities may depend only on Entities and Tools. They never depend on other objects (including other utilities).
 
-<h4>Network</h4>
+#### Network
 
 This module is responsible for sending network requests, receiving data from server, managing connections (if required) etc.
 
@@ -398,7 +404,7 @@ Network modules are also responsible for network error handling. This includes c
 
 Retrofit note. (Retrofit is a commonly used network library). You can use Retrofit for request/response formatting, but consider the requirements above. Basic Retrofit features include: relying on Entity field names for formatting, storing a data (like auth tokens) inside the network module - be aware of using this features. Also, note that default Retrofit configuration does not raise any errors, if some required response fields are missing - it just silently puts null into your Entity. Considering that, I find Retrofit quite useless for Wooden architecture, and recommend using OkHttp and manual Json parsing instead.
 
-<h4>Storage</h4>
+#### Storage
 
 Storage module represents disk storage. It is responsible for everything needed to store data on internal disk storage: SharedPreferences and SQLite databases is a common example.
 
@@ -423,7 +429,7 @@ The Storage tier is the only place where you should store your data on disk. Do 
 
 By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance. As a minimum, put a `version=1` key-value to your storage.
 
-<h4>Memory storage</h4>
+#### Memory storage
 
 As you may rememeber, UseCases (and Logic) objects are now allowed to store any data - neither on disk, neither in memory. But sometimes you need to keep some data in memory. This is where memory storage comes to play.
 
@@ -433,7 +439,7 @@ Obviously, Memory srorages are not required to care about migrations.
 
 Memory Storage + Storage represents _application state_. At every moment application behavior will depend only on these two modules.
 
-<h4>Other utilities</h4>
+#### Other utilities
 
 Depending on the nature of your app, you may need other kinds of utilities. Any entire, complete part of functionality which depends on Entities and (typically) some third-party software/hardware is a good candidate to be a utility. Make sure your utility does not contain too much of "business rules" - otherwise you may want to extract some business rules to Logic tier.
 
@@ -457,7 +463,7 @@ Although is is not 100% strict, I highly recommend you to use only _immutable_, 
 
 There are two types of entities in the architecture: global and local ones.
 
-<h4>Global entities</h4>
+#### Global entities
 
 Global entities are stored in Entities module and are used over all application. Even UI tier can use them. It is reasonable for simple applications: if you have to download `Order` from your server and show it "as is" in your UI, there is no reason to make things too complicated. Just create an `Order` entity and pass it through all the tiers from network to UI.
 
@@ -469,7 +475,7 @@ Let me repeat again. `@SerializedName` (a common Retrofit pattern) is forbidden 
 
 The key idea is that if backend developer would like to rename some API field, this rename should not affect (i.e. should cause NO code changes to) your Entity and should not affect (i.e. should cause NO code changes to) your UI classes (which use this Entity). Similar to, if one day you would like to slightly refactor your Room database, this refactoring should be limited to Storage module as long as possible.
 
-<h4>Local entities</h4>
+#### Local entities
 
 Once your application grows, you will find that what you store in your database does not perfectly match to what send/receive via network and to what you show on UI. Look at the Sample app. You may find that although it is a quite simple app, `CityForecast` formats in storage, network and UI have differences which are not only about field names or field formats, they have differences in it's sense.
 
@@ -507,7 +513,7 @@ Like UseCases (and like all Utilities, though), Logic component methods are high
 
 Logic objects are responsible to care about errors which can happen during the algorithm is running - either via handling, either via rethrowing it to a higher level.
 
-<h4>When logic becomes complicated</h4>
+#### When logic becomes complicated
 
 If your application grows even more, you may find yourself unable to fit into one Logic tier. Some of your Logic components become depending on the on the Logic components, and overall processing becomes complicated.
 
@@ -522,7 +528,7 @@ Here are possible strategies of how you can deal with complicated Logic. Use one
 
 ![Complex logic variants](./complex_logic.png)
 
-<h4>Bypassing Logic tier(s)</h4>
+#### Bypassing Logic tier(s)
 
 If you'll look at grand Wooden Architecture [scheme](./arch.png), you may find that Logic tier is different from the others. This is the only tier (or tiers, if you have multiple Logic tiers) which is allowed to be omitted, fully or partially.
 
@@ -574,7 +580,7 @@ Only UseCase components are publicly visible from outside of Container, other co
 
 Container constructor code, like a Table of Contents, briefly represents the whole application model structure and architecture, lists all the components used and connections between. It is quite easy to review this code to make sure your components keep properly ordered on high level.
 
-<h4>Dependency Injection</h4>
+#### Dependency Injection
 
 In fact, Container is what developers often call DI-container, and the assembling procedure is what is called "manual dependency injection". Although we have not used interfaces for our components, and our dependencies are quite tight due to that, it can be easily fixed. If your application requires, you can easily add interfaces and replace direct references between components with interface reference. If you'll also slightly regroup the components among the modules and invert some dependencies, you can easily refactor Wooden Architecture to classic Clean Architecture. Isn't that nice? In fact, I think that pure Clean Architecture is too complicated and not necessary for average Android Application. But if your application changes over time, you can adapt with the requirements.
 
@@ -582,13 +588,13 @@ When someone says "dependency injection", some Android developers hear "Dagger".
 
 Despite to that, one day you may find Dagger useful: for example, if you will face with necessity to implement multiple configurable Container variants for various versions of your app. Then you are still able to replace manual Container with Dagger.
 
-<h4>Gradle modules note</h4>
+#### Gradle modules note
 
 Container and Application objects are placed in separated gradle module. Why? Main reason for that, again, is dependency management. Container has to refer to all right-placed gradle modules (UseCases, Logic, Utilities) in order to be able to instantiate each of them. At the same time, we want Droid module to depend only on UseCases module, but not to Logic and Utilities, in order to prevent unwanted access from Activity. But if you feel yourself (and rest of your team) willful enough to refrain from direct access from Activity to Network withour gradle restrictions, you can merge Droid and App gradle modules into one.
 
 Note that Application class is non-accessible from components (UseCases, Logic, Utilities). Obviously, there is a reason for that: lower-level tiers should not be able to access Application, as far as it makes them able to access UseCases via Container. But utilities often need application Context - for example, it is required to access file storage. It is ok to implicitly pass Application object as a Context via component constructor.
 
-<h4>One more tier?</h4>
+#### One more tier?
 
 Attentive reader, who takes a look at the Container class in the Sample App code, may notice `DBInstance` object passed to ForecastStorage. Wait, you have said that Storage objects should depend on nothing rather than Tools and Entities, what is that? A mistake?
 
@@ -626,7 +632,7 @@ But there is a small trouble here. When you create a gradle module, it is a good
 
 If you have better suggestions to name this packages, please send me an idea (=
 
-<h4>So, where is the power?</h4>
+#### So, where is the power?
 
 The full description of the UI and other Android-related approaches will require a separate chapter, and once upon a time I will write it, maybe. Here I will be brief.
 
@@ -646,7 +652,7 @@ Activities are designed independently from each other. You should never keep imp
 
 These topics would be described in detail later in a separate chapter.
 
-<h4>Who is the captain?</h4>
+#### Who is the captain?
 
 Well, we have our ship assembled together and almost ready for departure. Ship crew (UseCases, Logic, Utilities, etc) are placed on their positions, communication lines between deckhands are properly set. Who will drive the team over the sea?
 
