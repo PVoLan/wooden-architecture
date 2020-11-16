@@ -40,7 +40,7 @@ You can also treat "object A" as any module of you application, such a gradle mo
 
 ## Tiers
 
-So, to beware from circular dependencies whole application is splitted into several tiers (some sources also call it "layers"). Concept is similar to multitier architecture, but particular tier roles are some different from [classic structure](https://en.wikipedia.org/wiki/Multitier_architecture).
+So, to make sure no circular dependencies will be presented, whole application is splitted into several tiers (some sources also call it "layers"). Concept is similar to multitier architecture, but particular tier roles are some different from [classic structure](https://en.wikipedia.org/wiki/Multitier_architecture).
 
 ![](./tiers.png)
 
@@ -211,6 +211,8 @@ Pay some attention to gradle modules on the image above. Although you can put al
 - **Less dependencies, more control.** Every particular Java class file usually has dozens of imports, they are changing often, and it is not easy to control their consistence. In contrast, there are only few gradle dependencies in the project, and they are rarely changed. You (or your team lead) can easily control that no gradle dependencies has been changed improperly
 - **Gradle forbids circular dependencies.**. If you'll have a module A referencing module B, is is impossible to create opposite direction reference, you'll get an exception during build. At the same time, Java has no any restrictions about circular ```import```'s
 
+Unfortunately, there is one huge disadvantage with using Gradle modules: performance. Implementing multiple Gradle modules significantly increases build time of the project. That's why at some point we have to stop with adding new modules and find another tool to organize the code.
+
 ## Arcitecture bricks
 
 Let's go through the architecture and define, what components it contains
@@ -338,7 +340,7 @@ Here is my list of OS-dependent features which I keep to the left of UseCases. T
 
 See also section about Droid module.
 
-<h4>UseCase method are synchronous</h4>
+<h4>UseCase methods are synchronous</h4>
 
 The important and unexpected (especially for Rx fans) consequence of the paragraph above: UseCase methods are synchronous by default (i.e. if you do not have very explicit reason to make them asynchronous). Same rule works for all the modules to the right from the UseCases: Logic, Storages and even Network calls.
 
