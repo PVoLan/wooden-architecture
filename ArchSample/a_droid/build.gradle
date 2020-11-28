@@ -10,6 +10,7 @@ android {
         targetSdkVersion project.ext.targetSDK
         versionCode project.ext.versionCode
         versionName project.ext.versionName
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -49,17 +50,20 @@ class ForecastItemVH extends RecyclerView.ViewHolder {
 
     TextView textDate;
     TextView textTemperature;
+    ImageView imageRun;
 
     public ForecastItemVH(@NonNull View itemView) {
         super(itemView);
 
         textDate = itemView.findViewById(R.id.textDate);
         textTemperature = itemView.findViewById(R.id.textTemperature);
+        imageRun = itemView.findViewById(R.id.imageRun);
     }
 
     void bind(MainScreenUseCase.ForecastItem forecastItem) {
         textDate.setText(forecastItem.getDateTime());
         textTemperature.setText(forecastItem.getTemperature());
+        imageRun.setVisibility(forecastItem.isWeatherGoodForRunning() ? View.VISIBLE : View.GONE);
     }
 
 }

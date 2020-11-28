@@ -7,15 +7,18 @@ import java.util.Locale;
 import ru.pvolan.archsample.entities.CityForecast;
 import ru.pvolan.archsample.logic.exception.LogicException;
 import ru.pvolan.archsample.logic.forecast.ForecastLogic;
+import ru.pvolan.archsample.storage.settings.SettingsStorage;
 import ru.pvolan.archsample.usecases.exception.UCException;
 import ru.pvolan.tools.calendar.CalendarHelper;
 
 public class MainScreenUseCase {
 
     private ForecastLogic forecastLogic;
+    private SettingsStorage settingsStorage;
 
-    public MainScreenUseCase(ForecastLogic forecastLogic) {
+    public MainScreenUseCase(ForecastLogic forecastLogic, SettingsStorage settingsStorage) {
         this.forecastLogic = forecastLogic;
+        this.settingsStorage = settingsStorage;
     }
 
 
@@ -34,19 +37,25 @@ public class MainScreenUseCase {
             throw new UCException(e.getMessage(), e);
         }
 
-        return prepareResult(forecast);
+        int minGoodTemperature = settingsStorage.readMinGoodTemperature();
+        int maxGoodTemperature = settingsStorage.readMaxGoodTemperature();
+        return prepareResult(forecast, minGoodTemperature, maxGoodTemperature);
     }
 
 
-    private ForecastData prepareResult(CityForecast forecast) {
+    private ForecastData prepareResult(CityForecast forecast, int minGoodTemperature, int maxGoodTemperature) {
 
         List<ForecastItem> items = new ArrayList<>(forecast.getForecasts().size());
 
         for (CityForecast.Forecast dayForecast : forecast.getForecasts()) {
             String dateTime = CalendarHelper.format(dayForecast.getLocalDateTime(), "dd MMM HH:mm", dayForecast.getLocalDateTime().getTimeZone());
-            String temperature = String.format(Locale.getDefault(), "%+d\u00B0C", (Math.round(dayForecast.getTemperatureCelsius())) );
+            int temperatureInt = Math.round(dayForecast.getTemperatureCelsius());
+            String temperatureString = String.format(Locale.getDefault(), "%+d\u00B0C", temperatureInt );
 
-            items.add(new ForecastItem(dateTime, temperature));
+            boolean isWeatherGoodForRunning =
+                    minGoodTemperature <= temperatureInt &&
+                            temperatureInt <= maxGoodTemperature;
+            items.add(new ForecastItem(dateTime, temperatureString, isWeatherGoodForRunning));
         }
 
         return new ForecastData(items);
@@ -67,10 +76,12 @@ public class MainScreenUseCase {
     public static class ForecastItem {
         private String dateTime;
         private String temperature;
+        private boolean isWeatherGoodForRunning;
 
-        public ForecastItem(String dateTime, String temperature) {
+        public ForecastItem(String dateTime, String temperature, boolean isWeatherGoodForRunning) {
             this.dateTime = dateTime;
             this.temperature = temperature;
+            this.isWeatherGoodForRunning = isWeatherGoodForRunning;
         }
 
         public String getDateTime() {
@@ -81,7 +92,7 @@ public class MainScreenUseCase {
             return temperature;
         }
 
-        public boolean isWeatherGoodForRunning() { return true; }
+        public boolean isWeatherGoodForRunning() { return isWeatherGoodForRunning; }
     }
 
 

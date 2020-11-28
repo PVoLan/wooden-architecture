@@ -5,6 +5,7 @@ import android.content.Context;
 import ru.pvolan.archsample.logic.forecast.ForecastLogic;
 import ru.pvolan.archsample.network.forecast.ForecastAPI;
 import ru.pvolan.archsample.storage.forecast.ForecastStorage;
+import ru.pvolan.archsample.storage.settings.SettingsStorage;
 import ru.pvolan.archsample.storage.tools.db.DBInstance;
 import ru.pvolan.archsample.usecases.main.MainScreenUseCase;
 
@@ -23,12 +24,13 @@ public class Container {
         //Storage
         DBInstance dbInstance = new DBInstance(appContext);
         ForecastStorage forecastStorage = new ForecastStorage(dbInstance);
+        SettingsStorage settingsStorage = new SettingsStorage(appContext);
 
         //Logic
         ForecastLogic forecastLogic = new ForecastLogic(appContext, forecastStorage, forecastAPI);
 
         //Use case
-        mainScreenUseCase = new MainScreenUseCase(forecastLogic);
+        mainScreenUseCase = new MainScreenUseCase(forecastLogic, settingsStorage);
 
     }
 
