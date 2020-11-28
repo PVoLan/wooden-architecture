@@ -6,7 +6,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-import ru.pvolan.archsample.storage.forecast.CityForecastDTO;
+import ru.pvolan.archsample.storage.forecast.CityDTO;
 import ru.pvolan.archsample.storage.forecast.ForecastDTO;
 import ru.pvolan.archsample.storage.forecast.ForecastDao;
 import ru.pvolan.archsample.storage.tools.db.room.mig.Migration1to2;
@@ -17,7 +17,7 @@ import ru.pvolan.archsample.storage.tools.db.room.mig.dto.MigrationDTODao;
 @Database(entities =
         {
                 MigrationDTO.class,
-                CityForecastDTO.class,
+                CityDTO.class,
                 ForecastDTO.class
         },
         version = 1, exportSchema = false)

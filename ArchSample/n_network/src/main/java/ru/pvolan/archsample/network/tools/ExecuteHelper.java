@@ -46,6 +46,7 @@ public class ExecuteHelper {
 
     public PResponse executeSync(PRequest request) throws NetworkException {
 
+        //Delay for demonstration purposes - make network requests really long
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

@@ -7,9 +7,9 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 @Entity(indices = {@Index(value = {"cityName"}, unique = true)})
-public class CityForecastDTO {
+public class CityDTO {
 
-    public CityForecastDTO(long id, @NonNull String cityName, @NonNull String lastUpdated, float lat, float lng) {
+    public CityDTO(long id, @NonNull String cityName, @NonNull String lastUpdated, float lat, float lng) {
         this.id = id;
         this.cityName = cityName;
         this.lastUpdated = lastUpdated;

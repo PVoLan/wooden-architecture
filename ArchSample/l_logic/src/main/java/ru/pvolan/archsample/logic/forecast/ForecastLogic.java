@@ -48,7 +48,7 @@ public class ForecastLogic {
 
         try {
             CityForecast downloadedForecast = forecastAPI.getForecast(cityName);
-            forecastStorage.putCityForecast(downloadedForecast);
+            forecastStorage.putCityForecast(cityName, downloadedForecast);
             return downloadedForecast;
         } catch (ErrorCodeRetrievedException e){
             if(e.getErrorCode() == 404) throw new CityNotFoundException(appContext);

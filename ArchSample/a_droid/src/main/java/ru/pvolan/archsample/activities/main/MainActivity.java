@@ -48,9 +48,9 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(MainActivityVM.class);
 
-        viewModel.getErrorText().observe(this, (Observer<String>) s -> onErrorTextChanged(s) );
-        viewModel.getProgressVisible().observe(this, (Observer<Boolean>) s -> onProgressVisibleChanged(s) );
-        viewModel.getData().observe(this, (Observer<MainScreenUseCase.ForecastData>) s -> onDataChanged(s) );
+        viewModel.getErrorText().observe(this, s -> onErrorTextChanged(s) );
+        viewModel.getProgressVisible().observe(this, s -> onProgressVisibleChanged(s) );
+        viewModel.getData().observe(this, s -> onDataChanged(s) );
     }
 
 

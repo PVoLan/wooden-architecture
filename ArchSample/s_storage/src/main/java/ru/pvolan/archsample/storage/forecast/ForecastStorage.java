@@ -31,15 +31,15 @@ public class ForecastStorage {
 
 
 
-    public CityForecastCache findCityForecast(String name) {
+    public CityForecastCache findCityForecast(String cityName) {
         synchronized (sync) {
 
             try {
-                CityForecastDTO cityForecastDTO = dao().findForecast(name);
+                CityDTO cityDTO = dao().findForecast(cityName);
 
-                if(cityForecastDTO == null) return null;
+                if(cityDTO == null) return null;
 
-                List<ForecastDTO> forecastDTOs = dao().getForecasts(cityForecastDTO.id);
+                List<ForecastDTO> forecastDTOs = dao().getForecasts(cityDTO.id);
 
                 List<CityForecast.Forecast> forecasts = new ArrayList<>(forecastDTOs.size());
                 for (ForecastDTO forecastDTO : forecastDTOs) {
@@ -49,13 +49,13 @@ public class ForecastStorage {
                     ));
                 }
 
-                Calendar updatedAt = CalendarHelper.parseFormat(cityForecastDTO.lastUpdated, lastUpdatedFormat);
+                Calendar updatedAt = CalendarHelper.parseFormat(cityDTO.lastUpdated, lastUpdatedFormat);
 
                 CityForecast cityForecast = new CityForecast(
                         new City(
-                                cityForecastDTO.cityName,
-                                cityForecastDTO.lat,
-                                cityForecastDTO.lng
+                                cityDTO.cityName,
+                                cityDTO.lat,
+                                cityDTO.lng
                         ),
                         forecasts
                 );
@@ -73,26 +73,26 @@ public class ForecastStorage {
 
 
     //Replaces existent one
-    public void putCityForecast(CityForecast cityForecast){
+    public void putCityForecast(String cityName, CityForecast cityForecast){
         db().runInTransaction((Runnable) () -> {
             synchronized (sync) { //Transaction is not enough due to lastUpdated generation
 
-                CityForecastDTO oldForecast = dao().findForecast(cityForecast.getCity().getName());
+                CityDTO oldForecast = dao().findForecast(cityName);
                 if (oldForecast != null) {
                     dao().deleteForecasts(oldForecast.id);
                     dao().deleteCityForecast(oldForecast.id);
                 }
 
                 Calendar now = Calendar.getInstance();
-                CityForecastDTO newCityForecastDto = new CityForecastDTO(
+                CityDTO newCityDto = new CityDTO(
                         0,
-                        cityForecast.getCity().getName(),
+                        cityName,
                         CalendarHelper.format(now, lastUpdatedFormat),
                         cityForecast.getCity().getLat(),
                         cityForecast.getCity().getLng()
                 );
 
-                long cityForecastId = dao().insertCityForecast(newCityForecastDto);
+                long cityForecastId = dao().insertCityForecast(newCityDto);
 
                 List<ForecastDTO> forecastDTOs = new ArrayList<>(cityForecast.getForecasts().size());
                 for (CityForecast.Forecast forecast : cityForecast.getForecasts()) {
@@ -114,7 +114,8 @@ public class ForecastStorage {
 
         db().runInTransaction((Runnable) () -> {
             synchronized (sync) { //Transaction is not enough due to lastUpdated generation
-                dao().deleteAll();
+                dao().deleteAllCities();
+                dao().deleteAllForecasts();
             }
         });
     }
