@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenWeather</string>
+    <string name="app_name">Weather good to run</string>
 
 
     <string name="main_city_hint">City name</string>
