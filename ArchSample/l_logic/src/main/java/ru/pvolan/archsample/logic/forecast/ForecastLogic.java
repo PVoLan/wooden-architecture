@@ -9,7 +9,7 @@ import ru.pvolan.archsample.logic.exception.CityNotFoundException;
 import ru.pvolan.archsample.logic.exception.LogicException;
 import ru.pvolan.archsample.network.exception.ErrorCodeRetrievedException;
 import ru.pvolan.archsample.network.exception.NetworkException;
-import ru.pvolan.archsample.network.forecast.ForecastAPI;
+import ru.pvolan.archsample.network.forecast.IForecastAPI;
 import ru.pvolan.archsample.storage.forecast.ForecastStorage;
 
 public class ForecastLogic {
@@ -18,10 +18,10 @@ public class ForecastLogic {
 
     private Context appContext;
     private ForecastStorage forecastStorage;
-    private ForecastAPI forecastAPI;
+    private IForecastAPI forecastAPI;
 
 
-    public ForecastLogic(Context appContext, ForecastStorage forecastStorage, ForecastAPI forecastAPI) {
+    public ForecastLogic(Context appContext, ForecastStorage forecastStorage, IForecastAPI forecastAPI) {
         this.appContext = appContext;
         this.forecastStorage = forecastStorage;
         this.forecastAPI = forecastAPI;

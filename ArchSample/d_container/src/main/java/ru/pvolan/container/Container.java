@@ -3,7 +3,9 @@ package ru.pvolan.container;
 import android.content.Context;
 
 import ru.pvolan.archsample.logic.forecast.ForecastLogic;
-import ru.pvolan.archsample.network.forecast.ForecastAPI;
+import ru.pvolan.archsample.network.forecast.IForecastAPI;
+import ru.pvolan.archsample.network.forecast.fake.FakeForecastAPI;
+import ru.pvolan.archsample.network.forecast.real.ForecastAPI;
 import ru.pvolan.archsample.storage.forecast.ForecastStorage;
 import ru.pvolan.archsample.storage.settings.SettingsStorage;
 import ru.pvolan.archsample.storage.tools.db.DBInstance;
@@ -21,7 +23,9 @@ public class Container {
     public Container(Context appContext) {
 
         //Network
-        ForecastAPI forecastAPI = new ForecastAPI(appContext);
+        //Choose one you prefer
+        IForecastAPI forecastAPI = new ForecastAPI(appContext);
+        //IForecastAPI forecastAPI = new FakeForecastAPI();
 
         //Storage
         DBInstance dbInstance = new DBInstance(appContext);

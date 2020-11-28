@@ -1,4 +1,4 @@
-package ru.pvolan.archsample.network.forecast;
+package ru.pvolan.archsample.network.forecast.real;
 
 import android.content.Context;
 
@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import ru.pvolan.archsample.entities.City;
 import ru.pvolan.archsample.entities.CityForecast;
 import ru.pvolan.archsample.network.exception.NetworkException;
+import ru.pvolan.archsample.network.forecast.IForecastAPI;
 import ru.pvolan.archsample.network.tools.ExecuteHelper;
 import ru.pvolan.archsample.network.tools.PParam;
 import ru.pvolan.archsample.network.tools.PRequest;
@@ -23,7 +24,7 @@ import ru.pvolan.archsample.network.tools.SuccessResultProcessor;
 import ru.pvolan.tools.calendar.CalendarHelper;
 import ru.pvolan.tools.json.JsonHelper;
 
-public class ForecastAPI {
+public class ForecastAPI implements IForecastAPI {
 
     private Context appContext;
     private RequestHelper requestHelper;
@@ -36,7 +37,7 @@ public class ForecastAPI {
     }
 
 
-
+    @Override
     public CityForecast getForecast(String cityName) throws NetworkException {
 
         PRequest request = requestHelper.createGetRequest("forecast",
