@@ -17,6 +17,8 @@ public class MainActivityVM extends ViewModel {
     ///////////////////////////////////////////
     // Data
 
+    private String lastUsedCityName = null;
+
     private MutableLiveData<Boolean> progressVisible = MutableLiveDataCreator.create(false);
     private MutableLiveData<String> errorText = MutableLiveDataCreator.create(null);
     private MutableLiveData<MainScreenUseCase.ForecastData> data = MutableLiveDataCreator.create(null);
@@ -38,9 +40,17 @@ public class MainActivityVM extends ViewModel {
     //Activity actions
 
 
+    void updateForecastIfNeeded(){
+        if(lastUsedCityName == null) return;
+        loadForecast(lastUsedCityName, false);
+    }
+
+
     void loadForecast(String cityName, boolean clearCache)
     {
         if(progressVisible.getValue()) return; //Accidental double click defense
+
+        lastUsedCityName = cityName;
 
         if(StringHelper.isNullOrEmpty(cityName)){
             errorText.setValue(SampleApp.getApp().getString(R.string.main_empty_city_name));
