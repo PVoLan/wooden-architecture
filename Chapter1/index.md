@@ -4,7 +4,7 @@
 
 Circular dependencies is a pain. Beware of them at any price.
 
-Let you have an object A. A calls an object B to do something. B calls an object C. C call an object D. This is ok.
+Let you have an object A. A calls an object B to do something. B calls an object C. C calls an object D.
 
 Circular dependency happens when an object D calls an object A to do something. As a react, object A may ask B to do something more, than B calls C, than C calls D again, than D calls A, A calls B, B calls C, C calls A (unexpectedly?)... and so on. This behavior is very difficult to read, understand and debug.
 
@@ -13,7 +13,7 @@ The word "object" here typically refers to an object as it is meant by object-or
 ```java
 import com.somepackage.B;
 
-class A {
+public class A {
 
   B b;
 
@@ -23,7 +23,7 @@ class A {
 }
 ```
 
-We also can say that A depends on B in that case (do you see the import required to compile A.java?)
+We can also say that A depends on B in that case (do you see the import required to compile A.java?)
 
 But this concept is not limited to OOP-object. If ```methodA()``` calls ```methodB()``` you may say that ```methodA()``` depends on ```methodB()```. Having a circular dependency for methods typically means a recursion. Recursion is a great thing sometimes, but if one recurrence consists of multiple method calls (especially if methods are placed in different blocks of code far from each other) it is very difficult to detect and debug.
 
@@ -38,11 +38,11 @@ So, to make sure no circular dependencies will be presented, whole application i
 
 Typical Android application has 4-5 tiers, but you may have more, if you need. Every tier contains one or more **components**.
 
-Every component is represented with some Java object/class. Typically every component is placed into separate Java-package.
+Every component is represented with some Java object/class. Only one instance of every component class is typically presented in the app, although it is not mandatory for really complicated apps. Typically every component is placed into separate Java-package.
 
-Sometimes it is possible for a component to consist of two or more Java classes/objects. In this case the component *must* be placed in separate package, and only one "main" class/object in this package has public visibility. Other classes in a components are threated as "helper" classes and should be package-private (or at least you should think about them as a package private). Local entity classes/object contained in the component, are also allowed to be public (see Entities section below). If you don't understand this paragraph, just ignore it for a while ans use a "one component = one class/object is a separate package" as a rule.
+Sometimes it is possible for a component to consist of two or more Java classes/objects. In this case the component *must* be placed in separate package, and only one "main" class/object in this package has public visibility. Other classes inside a component are threated as "helper" classes and should be package-private (or at least you should think about them as a package private). Local entity classes/object contained in the component are also allowed to be public (see Entities section below). If you don't understand this paragraph, just ignore it for a while ans use a "one component = one class/object inside a separate package" as a rule.
 
-Here and below word *component* is threated as a reference to either a package either a "main public class" of this package. Public methods of this "main public class" are called *public component methods* or *component methods*.
+Here and below word *component* is treated as a reference to either a package either a "main public class" of this package. Public methods of this "main public class" are called *public component methods* or *component methods*.
 
 There are general rules about how components are placed into tiers:
 - Different components inside of one tier are independent of each other. They don't even know about each other's existence. So, ```Component 1.1``` has no idea about ```Component 1.2```, and vice versa
@@ -66,11 +66,11 @@ The main difference between report and command is that report is not followed by
 
 It is very important to understand in any particular moment: is the word spoken a command or report? On a big commercial ships commands and reports are highly formalized to make communications clear. On a small sailing yacht, in a company of friends, especially if their sailing experience is quite equal, difference between captain and a deckhand may become not so clear, but it still persist. "Hey, John, do you see this stones ahead? Let's change our heading to the left a little" - this words will follow by a crew's action, or no, depending on who says it.
 
-Sometimes it is possible also to have some officers between captain and a deckhand guys (multitier ship). In this case command may come not only from the captain, but from the officers. But the general command-report concept remains the same: captain sends command to an officer: "Prepare to departure!", than officer brings commands to a deckhands or to a lower-level officers: "Warm up the engines!", "Check up people on board", "Make anchor ready to raise". Reports may go back: from the deckhand to officer: "There is a problem in a reserve engine", and from the officer to a captain: "We are ready to departure in 10 minutes".
+Sometimes it is possible also to have some officers between captain and a deckhand guys (multitier ship). In this case command may come not only from the captain, but from the officers. But the general command-report concept remains the same: captain sends command to an officer: "Prepare to departure!", than officer brings commands to a deckhands or to a lower-level officers: "Warm up the engines!", "Check up people on board", "Make anchor ready to hoist". Reports may go back: from the deckhand to officer: "There is a problem in a reserve engine", and from the officer to a captain: "We are ready to departure in 10 minutes".
 
 Typically it is not possible to move a ship (excepting very small boats) with only one man, you need a team usually. But any ship, including the smallest and biggest one, must have only one captain. It is impossible for a deckhand to send a _command_ to a captain - sailors beware of circular dependencies since the ancient times!
 
-Same story with the components in your application. Typically an application consists of many components, it is impossible to build a complex application with one class only. Application components communicate to each other (typically with method calls). Every time one component communicates to another one you should understand, which component is a captain, and which one is a deckhand. Every time you see a method call, you should understand: is it a _command_ or _report_?
+Same story happens with the components in your application. Typically an application consists of many components, it is impossible to build a complex application with one class only. Application components communicate to each other (typically with method calls). Every time one component communicates to another one you should understand: which component is a captain, and which one is a deckhand? Every time you see a method call, you should understand: is it a _command_ or _report_?
 
 Typically, in this example
 
@@ -118,9 +118,9 @@ class B {
   }
 
 
-    public interface BListener {
-      void onSomethingHappened();
-    }
+  public interface BListener {
+    void onSomethingHappened();
+  }
 }
 ```
 
@@ -132,7 +132,7 @@ class A {
 
   B b;
 
-  void subscribeBEvents() {
+  void subscribeOnBEvents() {
     b.addListener(new B.BListener() {
       public void onSomethingHappened() {
         onSomethingHappenedWithB();
@@ -156,7 +156,7 @@ The code below is a common pattern for various frameworks, especially ORMs.
 
 First time I've seen this pattern in 2011 in Microsoft's Entity framework. Years ago I stll find this pattern ambigious and bad.
 
-The user above is expected to be an Entity containing a data, like username, gender, date of birth, etc. This data is independent by it's nature - username is expected to stay the same disregarding of where this user is processed.
+The user above is expected to be an Entity containing a data, like username, gender, date of birth, etc. This data is independent by it's nature - username is expected to stay the same no matter of where this user is processed.
 
 But, what code above does? It saves the user. But you can't just save the user by itself! (saving user's life or soul is not a something what can be done with code, so this is not the case). You save user to *somewhere*: to particular database, file, server storage, arraylist or whatever, but there is always a concrete place where you'll store the user.
 
@@ -188,7 +188,7 @@ What's wrong with static objects? Their creation time is always undefined. When 
 
 On Android, Application object is a good place to keep any singleton object's - it is guaranteed by Android that you will always have one an only one instance of Application class. It is allowed to have a static reference to an Application object (this is the only one exception from the rule above) with some restrictions, see below. I think you can easily find an analog of this class in other platforms.
 
-Static methods are allowed, although, \
-a) if their execution and result depends only on it's parameters and nothing more. \
-b) They do not change anything ouside exept it's parameters and return value
-Various helpers are widely used to reduce boilerplate code
+Static methods are allowed, although, if \
+a) Their execution and result depends only on it's parameters and nothing more. \
+b) They do not change anything outside except it's parameters and return value \
+Various helpers (classes, containing only static methods) are widely used to reduce boilerplate code

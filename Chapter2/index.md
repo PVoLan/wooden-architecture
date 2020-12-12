@@ -8,21 +8,23 @@ Okay, now we'll start with application architecture itself.
 
 ## Gradle role
 
-Pay some attention to gradle modules on the image above. Although you can put all the code into one module, and replace gradle modules with separate Java packages, I'd recommend you to use modules as specified (or, if you know better solution for the purpose described below, please send me a note). Gradle modules are used here as a tool to strictify dependencies. Pay attention to the `build.gradle` files (dependencies section) in the sample app.
+Pay some attention to gradle modules on the image above. Although you can put all the code into one module, and replace gradle modules with separate Java packages, I'd recommend you to use modules as specified (or, if you know better solution for the purpose described below, please send me a note).
+
+Gradle modules are used here as a tool to strictify dependencies. Pay attention to the `build.gradle` files (dependencies section) in the sample app. Gradle has following advantages over imports about dependencies control:
 
 - **Explicit add of new dependencies.** While using packages, it is very easy to add ```import``` to another package. In most cases IDE like Android Studio will add ```import```'s almost automatically, sometimes even without notifying the developer. In contrast, Gradle dependencies are very explicit, they are almost never added automatically. Even when dependency is suggested by IDE, you'll have an explicit dialog and long-running gradle sync process after, so you'll less likely miss it.
-- **Less dependencies, more control.** Every particular Java class file usually has dozens of imports, they are changing often, and it is not easy to control their consistence. In contrast, there are only few gradle dependencies in the project, and they are rarely changed. You (or your team lead) can easily control that no gradle dependencies has been changed improperly
-- **Gradle forbids circular dependencies.**. If you'll have a module A referencing module B, is is impossible to create opposite direction reference, you'll get an exception during build. At the same time, Java has no any restrictions about circular ```import```'s
+- **Less dependencies, more control.** Every particular Java class file usually has dozens of imports, they are changing often, and it is not easy to control their consistence. In contrast, there are only few gradle dependencies in the project, and they are rarely changed. You (or your team lead) can easily control that no gradle dependencies has been changed improperly.
+- **Gradle forbids circular dependencies.**. If you'll have a module A referencing module B, it is impossible to create opposite direction reference, you'll get an exception during build. At the same time, Java has no any restrictions about circular ```import```'s.
 
 Unfortunately, there is one huge disadvantage with using Gradle modules: performance. Implementing multiple Gradle modules significantly increases build time of the project. That's why at some point we have to stop with adding new modules and find another tool to organize the code.
 
-## Arcitecture bricks
+## Wooden Architecture bricks
 
-Let's go through the architecture and define, what components it contains
+Let's go through the architecture and define what components it contains
 
 ### UseCases
 
-Use Cases, probably, is the most important detail of the Wooden architecture. In fact, I think, you can implement Use Cases only, and throw away rest of this document - just this small enhancement could significantly improve code quality of about 60% applications I've ever worked with.
+UseCases, probably, is the most important detail of the Wooden Architecture. In fact, I think, you can implement UseCases only, and throw away rest of this document - just this small enhancement could significantly improve code quality of about 60% applications I've ever worked with.
 
 Typically, one UseCase is created for every particular application screen (i.e. one UseCase per one Activity, or one UseCase per Fragment, if you use Fragments). The main UseCase purpose is to provide and process screen data in a way, most suiatble for particular screen.
 
@@ -58,7 +60,7 @@ class OrderData {
 class OrderItem {
   String name;
   int quantity;
-  BigDecinal price; //Maybe String - if you'd like to apply currency-dependent formatting
+  BigDecimal price; //Maybe String - if you'd like to apply currency-dependent formatting
   boolean showDiscountMarker;
   String deliveryAddress;
 }
@@ -70,7 +72,7 @@ User fills a form and clicks "Do the magic" button on the screen. Some action ha
 ```java
 class LoginActvityUseCase {
 
-  //Returns user name. We want to show "Hello $username!" label after login is completed
+  //Returns user name. We want to show "Hello, $username!" label after login is completed
   public String login(String login, String password) throws LoginException {
     //Do some magic - validate the inputs, authorize on server, download user profile,
     //store it in local cache, apply local settings, load advanced data, etc.
@@ -94,9 +96,9 @@ In real life you may find cases different from the two described above. But, in 
 
 Process the action - this is what UseCase is responsible for.
 
-<h4>Use case is for data processing, not storing</h4>
+#### Use case is for data processing, not storing
 
-Use Cases are not allowed to store any data. You should not have any data fields inside UseCase class. Use Storage or Memory Storage (see corresponding sections) if you need to store something.
+UseCases are not allowed to store any data. You should not have any data fields inside UseCase class. Use Storage or Memory Storage (see corresponding sections) if you need to store something.
 
 This simple rule is a first step to prevent your UseCase from becoming a God object.
 
@@ -106,23 +108,23 @@ Using UseCases gives you a one huge benefit. UseCase is both a border and bridge
 
 The way you organize everything to the right from the UseCase on this [picture](./arch.png) - database, business logic, network requests - is a developer's preference. In contrast, everything to the left from the UseCase (UI, in fact) - is a user's, or customer's, or designer's preference.
 
-For example, if you are developing and online shop application, you'd probably design the database scheme with normalized structure and best developers patterns. You'd put Shop Catalog items in one table, Users into another table, Orders into third table (and this table will probably have some references aka foreign keys to the two above), Order Items into fourth. Also you will have a separate storage for current user profile and his display settings. Similar story with network - you will use dozens of HTTP API calls, REST or RPC, maybe WebSockets, Protobuf, XML, SOAP, or whatever you like or need to use. If your smartphone is connected to a third-party hardware, for example to a bank card payment terminal, you'll have a separate bunch of packages describing the communication process with this terminal. As a developer, **you can design you model in the way developer feel the best**.
+For example, if you are developing an online shop application, you'd probably design the database scheme with normalized structure and best developers patterns. You'd put Shop Catalog items in one table, Users into another table, Orders into third table (and this table will probably have some references aka foreign keys to the two above), Order Items into fourth. Also you will have a separate storage for current user profile and his display settings. Similar story with network - you will use dozens of HTTP API calls, REST or RPC, maybe WebSockets, Protobuf, XML, SOAP, or whatever you like or need to use. If your smartphone is connected to a third-party hardware, for example to a bank card payment terminal, you'll have a separate bunch of packages describing the communication process with this terminal. As a developer, **you can design you model in the way you (developer) feel the best**.
 
 In contrast, when we start with UI design, you're not so free. **The UI is designed in the way your user feels the best.** Depending of the business model in your company, understanding of "what is the best for users" can be declared by your project manager, customer, UI designer, marketing department, user reviews, beta-testers or someone else, but almost never by developer's team. And this is OK. For example, if we are talking about "Order screen" at your shop application, end user may want to see together order information, order items information, names and addresses of users who are involved into this order and payment terminal transaction status. All this stuff layout can vary depending on current user settings. And, be sure, next week designer will come with a new fresh feature to add to this soup.
 
-Nobody cares that to show all this information on one screen you have to combine dozens of database tables and, bunch of network requests and a pack of business logic algorithms. If your product manager wants to add a new label on the screen, and you're unable to add it just because the information for this label stays in a different database table, your manager never become happy.
+Nobody cares that to show all this information on one screen you have to combine dozens of database tables and, bunch of network requests and a pack of business logic algorithms. If your product manager wants to add a new label on the screen, and you're unable to add it just because the information for this label stays in a different database table, your manager will never become happy.
 
-Here is where UseCase comes into force. UseCase is the right place to combine the dozens of databases, network requests and business logic units, required for just this particular screen. Here you adapt your model to your UI. Here is a bridge between developer's point of view and user's point of view.
+Here is where UseCase comes into force. UseCase is the right place to combine the dozens of databases, network requests and business logic units, required for just _this particular screen_. Here you adapt your model to your UI. Here is a bridge between developer's point of view and user's point of view.
 
 That's why it is quite important to have a separate UseCase for every screen in your app. Even if you see two screens are similar to each other, have a separate UseCase for every screen. If you feel that two or more screens have some common functionality, extract this functionality to common Logic object, reused by two or more UseCases, but never share a UseCase between two or more screens. Remember, next week your designer will come with a fresh new idea, and these two screens will not stay similar anymore. UseCase is your wiggle room for unexpected UI changes.
 
-#### The border between OS dependent and non-OS dependent code
+#### The border between OS dependent and non-OS dependent code (historical note)
 
 Historically, Wooden Architecture was born in a Xamarin-based project.
 
-Xamarin is a crossplatform framework. It allows you to write crossplatform applications for iOS, Android, and some other applications, using C# language. Despite the fact it's base language on C#, Xamarin allows you to access native API - all the calls to native Android SDK for Android apps are proxied to Xamarin, and same thing is true for iOS SDK. At the same time, Xamarin has a set of its own APIs developer can use with the same code on both platforms (.NET common API, network calls, file storage access (file input-output streams or SQLite.NET library), etc).
+Xamarin is a crossplatform framework. It allows you to write crossplatform applications for iOS, Android and some other operating systems, using C# language. Despite the fact it's base language on C#, Xamarin allows you to access native API - all the calls to native Android SDK for Android apps are proxied to Xamarin, and same thing is true for iOS SDK. At the same time, Xamarin has a set of its own APIs. Developer can use this APIs within the same code on both platforms (.NET common API, network calls, file storage access (file input-output streams or SQLite.NET library), etc).
 
-The days we developed our project (finances management app), we had the following strategy: the UI is designed and implemented independently for iOS and Android version. Business logic level, uncluding network and SQL database processing we shared between two platforms with a single code. Although UI for both OS was quite similar, iOS and Android version had significant differencies: styling details, screen sizes management, navigation behavior, notifications tuning, background operations processing, etc. For example, tab navigation control had tabs on the top for Android app and on the bottom for iOS app. At the same time basic UI content, basic user operations and, of course, finances calculation logic was the same for both platforms: the algorithm to calculate your income should not care about what OS you have on your smartphone.
+The days we developed our project (finances management app), we had the following strategy: the UI is designed and implemented independently for iOS and Android version. Business logic level, uncluding network and SQL database processing was shared between two platforms within a single code. Although UI for both platforms was quite similar, iOS and Android version had significant differencies: styling details, screen sizes management, navigation behavior, notifications tuning, background operations processing, etc. For example, tab navigation control had tabs on the top for Android app and on the bottom for iOS app. At the same time basic UI content, basic user operations and, of course, finances calculation logic was the same for both platforms: the algorithm to calculate your income should not care about what OS you have on your smartphone.
 
 So, this is where UseCases were born. For every screen we had a separate UI for every platform: Activity for Android and ViewController for iOS. At the same time, for every screen we had a shared UseCase, which was responsible to provide a data (pre-calculated financial data) for particular screen. UseCase and everything to the right from it was treated as a crossplatform business logic zone. Everything to the left from UseCase was treated as OS-dependent code.
 
@@ -132,7 +134,7 @@ The picture above looks like simplified version of the grand wooden architecture
 
 This strategy raised the question: what code we should treat as "crossplatform", and what is OS-dependent? What are our business logic needs, and what are caprices of the operating system we should work with?
 
-When you write a pure non-crossplatform app using Java or Kotlin, the difference between "OS-Dependent" and business dependent is not so clear and obvious. Moreover, you have to use some Android APIs to access obviously non-OS-dependent features - for example, you need Android Context to access file storage. But it is reasonable to ask you same question as if you'd were developing a crossplatform app: what are our business logic needs, and what are the caprices of the operating system we should work with? UseCase may work as a helpful border between one and another.
+When you write a pure non-crossplatform app using Java or Kotlin, the difference between "OS dependent" and "business dependent" is not so clear and obvious. Moreover, you have to use some Android APIs to access obviously non-OS-dependent features - for example, you need Android Context to access file storage. But it is reasonable to ask you same question as if you'd were developing a crossplatform app: what are our business logic needs, and what are the caprices of the operating system we should work with? UseCase may work as a helpful border between one and another.
 
 Here is my list of OS-dependent features which I keep to the left of UseCases. This list is not strict, and you may alter it on your choice (or throw the whole idea away =)
 
@@ -149,7 +151,7 @@ The important and unexpected (especially for Rx fans) consequence of the paragra
 
 There are multiple advantages of this approach, so let me discuss them step by step.
 
-**Synchronous call are simpler to read and understand.** If your application is something more complicated that just a "styled web-browser", you may have a complicated logic. It is complicated by it's nature, for example, by nature of financial operations. There is no need to make them even more complicated by adding the asynchronous behavior
+**Synchronous call are simpler to read and understand.** If your application is something more complicated than just a "styled web-browser", you may have a complicated logic. It is complicated by it's nature, for example, by nature of financial operations. There is no need to make them even more complicated by adding the asynchronous behavior.
 
 **Synchronous calls are more stable**. When I perform a synchronous call, is guaranteed to return a result once and only once, or to throw one and only one exception. It is guaranteed by Java language. If you use immutable Entites (see Entites section), it is also guaranteed that result would not unexpectedly change after method call is finished.
 
@@ -159,11 +161,11 @@ When I perform an asynchronous call, nothing is guaranteed regarding the callbac
 
 **Async calls are often closely bound with Activity lifecycle**. When your activity gets destroyed or reconfugired during async call, you have to care somehow about it. And you'd better to care about it on Activity level, not on a Network level.
 
-**There is no need to be super-high-performant**. What??? Yes. Why do we use AsyncTask, or ThreadPool or brand-new-coroutines, why we cant just start a new Java Thread? They say: creating new Thread is a resource consuming operation. But, wait, what does it mean "resource consuming"? Thread stack size is about 8kb by default, and I have never seen starting new Thread took more than 1 ms (this is a minimal time unit I can measure with standard tools).
+**There is no need to be super-high-performant**. What??? Yes. Why do we use AsyncTask, or ThreadPool or brand-new-coroutines, why we cant just start a new Java Thread? They say: creating new Thread is a resource consuming operation. But, wait, what does it mean "resource consuming"? Thread stack size is about 8kb by default, and I have never seen starting new Thread took more than 1 ms (this is a minimal time unit I can measure with standard tools), even on 10-years old and slow smartphone.
 
 Most of the asynchronous technologies, like thread pools, reactive objects, data streams, etc., come from server-side development. Server-side developers often meet significant performance issues, and they care about it too much. When your server receives about 1 million requests per second, surely, 1 microsecond delay or 10 kb memory allocation per request can lead to dramatic consequences. But even here most of these consequences are to be tested experimentally.
 
-What is the most typical Android app use case? User clicks the button -> application shows progress bar -> processes data -> hides progress bar -> shows result to user. Even the most crazy user would not tap the smartphone screen more than 10 times per second. You can freely start a pure `new Thread()` for every tap, you will not see any performance difference on this rate (although I'd still suggest using thread pools or whatever, just to follow code-style).
+What is the most typical Android app use case? User clicks the button -> application shows progress bar -> processes data -> hides progress bar -> shows result to user. Even the most crazy user would not tap the smartphone screen more than 10 times per second. You can freely start a pure `new Thread()` for every tap, you will not see any performance difference on this rate (although I'd still suggest using thread pools or whatever, just to follow common code-style).
 
 I think, the only case when you'll meet request rate from UI more than 10 times per second is a scrolling (particularly, ListView scrolling, if you perform a request per every list item shown). In this case you'll need some kind of asynchronous operation. But this case is quite rare. Then, next...
 
