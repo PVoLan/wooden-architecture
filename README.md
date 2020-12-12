@@ -5,7 +5,7 @@
 [3. Android implementation details (Work in progress)](.)  
 [4. Possible enhancements and improvements (Work in progress)](.)  
 
-[Sample app](./ArchSample)  
+[Sample app](./WASampleApp)  
 
 # Introduction
 
