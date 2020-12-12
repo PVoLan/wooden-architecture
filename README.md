@@ -2,8 +2,8 @@
 
 [1. Key concepts](./Chapter1/index.md)  
 [2. General architecture description](./Chapter2/index.md)  
-[3. Android implementation details (Work in progress)](.)  
-[4. Possible enhancements and improvements (Work in progress)](.)  
+[3. Android implementation details (Work in progress)](?)  
+[4. Possible enhancements and improvements (Work in progress)](?)  
 
 [Sample app](./WASampleApp)  
 
