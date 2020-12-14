@@ -236,7 +236,7 @@ As you may rememeber, UseCases (and Logic) objects are now allowed to store any 
 
 Memory storage is just like Storage, but in memory. It will have `readXXX()` and `saveXXX()` methods, but it will store data into class field instead of file or SharedPreferences. It is not allowed to contain any logic. You can have multiple Memory Storages, and group stored data by usage. Multiple UseCases can access one Memory Storage, and vice versa. All the other Storage rules also apply to Memory Storage.
 
-Obviously, Memory srorages are not required to care about migrations.
+Obviously, Memory storages are not required to care about migrations.
 
 Memory Storage + Storage represents _application state_. At every moment application behavior will depend only on these two modules.
 
@@ -260,37 +260,37 @@ Entites are POJO's (Plain Old Java Objects). They do only contain data. They do 
 
 As a rare exemption, short pure methods are allowed, if they do not change entity fields and their behavior is affected only by entity fields. For example, if you have `Order` entity, which contains a list of `OrderItem` entities, you may find quite handy to add `getItemCount()` method to `Order` class. But in case of any doubts prefer to put data processing methods to Logic classes.
 
-Although is is not 100% strict, I highly recommend you to use only _immutable_, read-only entities. In this case, no setters are allowed in Entity classes. Also, although Java does not have a good support for that ([here is an option](https://docs.oracle.com/javase/1.5.0/docs/api/java/util/Collections.html#unmodifiableList(java.util.List))), I recommend you to treat any Entity collections as read-only. Using immutable entities and lists makes you sure, that after you receive the Entity as a return value from some method, no one will unexpectedly change it. If you need to modify entity - just create a new one!
+Although it is not 100% strict, I highly recommend you to use only _immutable_, read-only entities. In this case, no setters are allowed in Entity classes. Also, although Java does not have a good support for that ([here is an option](https://docs.oracle.com/javase/1.5.0/docs/api/java/util/Collections.html#unmodifiableList(java.util.List))), I recommend you to treat any Entity collections as read-only. Using immutable entities and lists makes you sure that after you receive an Entity as a return value from some method, no one will unexpectedly change it. If you need to modify an entity - just create a new one!
 
 There are two types of entities in the architecture: global and local ones.
 
 #### Global entities
 
-Global entities are stored in Entities module and are used over all application. Even UI tier can use them. It is reasonable for simple applications: if you have to download `Order` from your server and show it "as is" in your UI, there is no reason to make things too complicated. Just create an `Order` entity and pass it through all the tiers from network to UI.
+Global entities are stored in Entities module and are used over whole application. Even UI tier can use them. It is reasonable for simple applications: if you have to download `Order` from your server and show it "as is" in your UI, there is no reason to make things too complicated. Just create an `Order` entity and pass it through all the tiers from network to UI.
 
 There is a constraint here, although. Global Entities should depend on **nothing**. Entities gradle module does not have any dependencies, excepting `Tools` module. They should not rely on network and storage.
 
 There is a common pattern to use some third-party tools, like Retrofit (commonly used network library), Room (commonly used SQL databases library), or similar, to automatically convert POJO to JSON API request or SQLite tables, based on entity field names. This is **strictly forbidden** for global Entities. Even when such a conversion does not cause a gradle dependency, this causes an implicit binding between entity and network request/database format. As far as global entities are used globally, this binding can have critical consequences.
 
-Let me repeat again. `@SerializedName` (a common Retrofit pattern) is forbidden when using Global entities. But even if by occasion you Entity field names match API JSON keys, you must provide manual parsing from JSON to Entity and back. Same story for Room - your entity is not a room `@Entity`, and you should never expect them to be same.
+Let me repeat again. `@SerializedName` (a common Retrofit pattern) is forbidden when using Global entities. But even if by occasion you Entity field names match API JSON keys, you must provide manual parsing from JSON to Entity and back. Same story for Room - your entity is not an `@Entity`, and you should never expect them to be same.
 
 The key idea is that if backend developer would like to rename some API field, this rename should not affect (i.e. should cause NO code changes to) your Entity and should not affect (i.e. should cause NO code changes to) your UI classes (which use this Entity). Similar to, if one day you would like to slightly refactor your Room database, this refactoring should be limited to Storage module as long as possible.
 
 #### Local entities
 
-Once your application grows, you will find that what you store in your database does not perfectly match to what send/receive via network and to what you show on UI. Look at the Sample app. You may find that although it is a quite simple app, `CityForecast` formats in storage, network and UI have differences which are not only about field names or field formats, they have differences in it's sense.
+Once your application grows, you will find that what you store in your database does not perfectly match to what send/receive via network and to what you show on UI. Look at the Sample app. You may find that although it is a quite simple app, `CityForecast` formats in Storage, Network and UI have differences which are not only about field names or field formats, they have differences in it's sense.
 
-For example, `CityForecast` in storage uses a `lastUpdatedAt` field. This fields shows when the particular `CityForecast` was updated from the server, and used as a marker to renew a cached value. Obviously, you do not receive `lastUpdatedAt` from your server, so Network module should not care about it. Also, as far as it is used for caching, i.e. for developer's need, we do not show it to user, so UI level also has nothing to do with `lastUpdatedAt`.
+For example, `CityForecast` in Storage uses a `lastUpdatedAt` field. This fields shows when the particular `CityForecast` was updated from the server, and used as a marker to renew a cached value. Obviously, you do not receive `lastUpdatedAt` from your server, so Network module should not care about it. Also, as far as it is used for caching, i.e. for developer's need, we do not show it to user, so UI level also has nothing to do with `lastUpdatedAt`.
 
 On the other hand, "UI-level-forecast" has to deal with `isWeatherGoodForRunning()` option. This is a just a UI-level marker, we don't want to burden `ForecastStorage` or `ForecastAPI` with this information.
 
-This is where local entities come to play. They are also POJOs, read-only and used as a public component method parameters/return values. But they are related to particular component. Local entities are declared at the same place where corresponding component is declared (as component inner class or as a separate class, but in the same package with component). That means they have same visibility scope as the component.
+This is where local entities come to play. Like global entities, they are also POJOs, read-only and used as a public component method parameters/return values. But they are related to particular component. Local entities are declared at the same place where corresponding component is declared (as component inner class or as a separate class, but in the same package with component). That means they have same visibility scope as the component.
 
 For example, `CityForecastCache` class relates to `ForecastStorage` and has same visibility as `ForecastStorage`. That means UseCase and Logic classes can access `CityForecastCache`, but Network and UI classes can not.
 
 Because of the reduced visibility, independence constraint for Local entities is relaxed. They may depend on same tools and libraries their component depends on. That means they, if needed, can be used with Retrofit/Room for automatic parsing. It is still recommended to keep Local entity public interface independent, but this is not 100% mandatory. In best case, if backend developer API will change some JSON fields, local entity public interface should not change. In worst case, it will change, and Logic and UseCase classes using this object will also change, but rest of the application will stay untouched.
 
-When creating Local entites, you may create the as a completely new entity (with newly created fields. for ex. `MainScreenUseCase.ForecastItem`), or create is as a wrapper over another Entity (global or local - example is `ForecastStorage.CityForecastCache`, which is a wrapper over `CityForecast`). As far as all Entities are immutable, both approaches are fine, but when using last one, make sure your wrapper does not disclose unnecessary information of inner object - inner object may relate to another tier.
+When creating Local entities, you may create them as a completely new entity (with newly created fields. for ex. `MainScreenUseCase.ForecastItem`), or create is as a wrapper over another Entity (global or local - example is `ForecastStorage.CityForecastCache`, which is a wrapper over `CityForecast`). As far as all Entities are immutable, both approaches are fine, but when using last one, make sure your wrapper does not disclose unnecessary information of inner object - inner object may be a part of another tier.
 
 ### Logic
 
@@ -308,7 +308,7 @@ Logic components is what developers often call "business logic", but it is not r
 
 Similar to other tiers, you may have multiple Logic components. Like UseCases, Logic components can depend on Entities, Utilities and Tools. At a first glance, Logic components should not depend on each other, but this rule may be canceled, see below. Some Logic objects may depend on nothing (imagine tax calculation algorithm in financial application, whose result depends only on parameters passed).
 
-Like UseCases, Logic objects are use for data processing, and are not allowed to store any data. Use storages, if you need to store something.
+Like UseCases, Logic objects are use for data processing, and are not allowed to store any data fields. Use storages if you need to store something.
 
 Like UseCases (and like all Utilities, though), Logic component methods are highly recommended to be synchronous as much as possible. Logic methods may be really complicated, and we should avoid unnecessary complexity.
 
@@ -318,14 +318,14 @@ Logic objects are responsible to care about errors which can happen during the a
 
 If your application grows even more, you may find yourself unable to fit into one Logic tier. Some of your Logic components become depending on the on the Logic components, and overall processing becomes complicated.
 
-There is no universal solution for this situation, and you have to adjust the Wooden Architecture to your case. But the key concept should stay the same, most important one is a "no circular dependencies" rule. You may want to reorganize Logic component in any way you'd prefer, but your organization should guarantee that no circular dependencies is allowed between Logic components and other components.
+There is no universal solution for this situation, and you have to adjust the Wooden Architecture to your case. But the key concepts should stay the same: most important one is a "no circular dependencies" rule. You may want to reorganize Logic component in any way you'd prefer, but your organization should guarantee that no circular dependencies is allowed between Logic components and other components.
 
-Try to limit your reorganization to Logic tier. You may want to split Logic module into two or more Logic modules, or reorganize tiers structure inside source Logic module. But do not mix Logic components and Utilities, and avoid Logic to store any fields.
+Try to keep your reorganization within the Logic tier. You may want to split Logic gradle module into two or more modules, or reorganize tiers structure inside original Logic module; but do not mix Logic components and Utilities, and avoid Logic to store any data fields.
 
-Here are possible strategies of how you can deal with complicated Logic. Use one, or mix multiple, or create your own at your choice
-- Introduce multiple logic tiers, so that upper-level tier would depend on lower-level
-- Introduce stack of logical tiers. This is similar to previous one, but only upper level logic will depend on Utilities. You may need a good dependency injection skill in that case, and the whole concept look similar to Clean Architecture approach
-- Let Logic components contain sub-components, which will reduce complexity on the parent component. Subcomponets scope is limited to parent component.
+Here are possible strategies of how you can deal with complicated Logic. Use one, or mix multiple, or create your own at your choice:
+- Introduce multiple logic tiers, so that upper-level tier would depend on lower-level.
+- Introduce stack of logical tiers. This is similar to previous one, but only upper level logic will depend on Utilities. You may need a good dependency injection skill in that case, and the whole concept looks similar to Clean Architecture approach.
+- Let Logic components contain sub-components, which will reduce complexity on the parent component. Subcomponent's scope is limited to parent component.
 
 ![Complex logic variants](./complex_logic.png)
 
@@ -351,7 +351,7 @@ Here are some examples of Tools I often use:
 looks more smart in my code than   
 `Log.i(LOG_TAG, "Hello!")`
 - JSON tool. I'm generally fine with `JSONObject` API, but I often want parser to throw exception if `null` value was found. `JSONObject.getString()` will throw if no key found, but will return null if key with `null` value was found, what is often inappropriate when parsing network responses with mandatory fields.
-- Calendar helper. Few line of code to replace
+- Calendar helper. Few lines of code to replace
 ```java
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
 simpleDateFormat.setCalendar(calendar);
@@ -367,13 +367,13 @@ And others. Surely, the set of Tools to use may differ depending on the task and
 
 Any other module in your code (including Global Entities) can depend on Tools. Tools are treated as a "language improvements", so they can be used application-widely. Tools module itself is independent - it cannot have a reference to other modules (but it can use third-party libraries if needed).
 
-What is the main difference between Tools and other modules? Tool has no idea about what project it is used in. If I have a code snippet which can be easily copy-pasted from my medical application to cargo taxi application I will develop next month, as well as into musical player app, this is a good candidate to become a Tool. Otherwise I have to consider a Logic component instead, Utility, or something similar
+What is the main difference between Tools and other modules? Tool has no idea about what project it is used in. If I have a code snippet which can be easily copy-pasted from my medical application to cargo taxi application I will develop next month, as well as into musical player app, this is a good candidate to become a Tool. Otherwise I have to consider a Logic component instead, Utility, or something similar.
 
 ### Application container
 
 Okay, we have defined most of the modules and components we use in the architecture. Now it's time to assemble them all together. This is what Container is used for.
 
-There is one instance of Container in the application, it is created and stored in Application object. In Container's constructor all the UseCase, Logic and Utility objects are created and connected to each other. Typically, exactly one instance if each component is created.
+There is one instance of Container in the application, it is created and stored within Application object. In Container's constructor all the UseCase, Logic and Utility objects are created and connected to each other. Typically, exactly one instance of each component is created.
 
 Container is created inside `Application.onCreate()` method. Make sure Container's and components' constructors  do nothing rather than object instantiations and reference assignments: `onCreate()` must be quick, and instantiations and assignments are quick enough even if you have thousands of components.
 
