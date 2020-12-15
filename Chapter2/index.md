@@ -151,7 +151,7 @@ The important and unexpected (especially for Rx fans) consequence of the paragra
 
 There are multiple advantages of this approach, so let me discuss them step by step.
 
-**Synchronous call are simpler to read and understand.** If your application is something more complicated than just a "styled web-browser", you may have a complicated logic. It is complicated by it's nature, for example, by nature of financial operations. There is no need to make them even more complicated by adding the asynchronous behavior.
+**Synchronous calls are simpler to read and understand.** If your application is something more complicated than just a "styled web-browser", you may have a complicated logic. It is complicated by it's nature, for example, by nature of financial operations. There is no need to make them even more complicated by adding the asynchronous behavior.
 
 **Synchronous calls are more stable**. When I perform a synchronous call, is guaranteed to return a result once and only once, or to throw one and only one exception. It is guaranteed by Java language. If you use immutable Entites (see Entites section), it is also guaranteed that result would not unexpectedly change after method call is finished.
 
@@ -377,13 +377,13 @@ There is one instance of Container in the application, it is created and stored 
 
 Container is created inside `Application.onCreate()` method. Make sure Container's and components' constructors  do nothing rather than object instantiations and reference assignments: `onCreate()` must be quick, and instantiations and assignments are quick enough even if you have thousands of components.
 
-Only UseCase components are publicly visible from outside of Container, other components are private. Any Activity or Fragment can easily access Application object via static reference, then access Container, then access corresponding UseCase to retrieve data and or perform particular action.
+Only UseCase components are publicly visible from outside of Container, other components are private. Any Activity or Fragment can easily access Application object via static reference, then access Container, then access corresponding UseCase to retrieve data and/or perform particular action.
 
-Container constructor code, like a Table of Contents, briefly represents the whole application model structure and architecture, lists all the components used and connections between. It is quite easy to review this code to make sure your components keep properly ordered on high level.
+Container's constructor code, like a Table of Contents, briefly represents the whole application model structure and architecture, lists all the components used and connections between. It is quite easy to review this code to make sure your components are kept properly ordered from the high-level point of view.
 
 #### Dependency Injection
 
-In fact, Container is what developers often call DI-container, and the assembling procedure is what is called "manual dependency injection". Although we have not used interfaces for our components, and our dependencies are quite tight due to that, it can be easily fixed. If your application requires, you can easily add interfaces and replace direct references between components with interface reference. If you'll also slightly regroup the components among the modules and invert some dependencies, you can easily refactor Wooden Architecture to classic Clean Architecture. Isn't that nice? In fact, I think that pure Clean Architecture is too complicated and not necessary for average Android Application. But if your application changes over time, you can adapt with the requirements.
+In fact, Container is what developers often call DI-container, and the assembling procedure is what developers call "manual dependency injection". Although we have not used interfaces for our components, and our dependencies are quite tight due to that, it can be easily fixed. If your application requires, you can easily add interfaces and replace direct references between components with interface reference. If you'll also slightly regroup the components among the modules and invert some dependencies, you can easily refactor Wooden Architecture to classic Clean Architecture. Isn't that nice? In fact, I think that pure Clean Architecture is too complicated and not necessary for average Android Application. But if your application changes over time, you can adapt with the requirements.
 
 When someone says "dependency injection", some Android developers hear "Dagger". Why do not use Dagger or similar tool here? Well, first, as I already mentioned, I don't want to use third-party library if I can solve the task with few lines of code. Second, now my components have minimal number of dependencies: adding classic `@Inject` annotations will add unnecessary Gradle dependency to components' configurations. Of course, you can use Dagger modules instead of `@Inject` annotation, but modules are usually treated as advanced level of Dagger usage. Also, modules configuration is not going to take less lines of code than Container class implementation.
 
@@ -391,9 +391,9 @@ Despite to that, one day you may find Dagger useful: for example, if you will fa
 
 #### Gradle modules note
 
-Container and Application objects are placed in separated gradle module. Why? Main reason for that, again, is dependency management. Container has to refer to all right-placed gradle modules (UseCases, Logic, Utilities) in order to be able to instantiate each of them. At the same time, we want Droid module to depend only on UseCases module, but not to Logic and Utilities, in order to prevent unwanted access from Activity. But if you feel yourself (and rest of your team) willful enough to refrain from direct access from Activity to Network withour gradle restrictions, you can merge Droid and App gradle modules into one.
+Container and Application objects are placed in a separated gradle module. Why? Main reason for that, again, is dependency management. Container has to refer to all right-placed gradle modules (UseCases, Logic, Utilities) in order to be able to instantiate each of them. At the same time, we want Droid module to depend only on UseCases module, but not to Logic and Utilities, in order to prevent unwanted access from Activity. But if you feel yourself (and rest of your team) willful enough to refrain from direct access from Activity to Network without gradle restrictions, you can merge Droid and App gradle modules into one.
 
-Note that Application class is non-accessible from components (UseCases, Logic, Utilities). Obviously, there is a reason for that: lower-level tiers should not be able to access Application, as far as it makes them able to access UseCases via Container. But utilities often need application Context - for example, it is required to access file storage. It is ok to implicitly pass Application object as a Context via component constructor.
+Note that Application class is non-accessible from components (UseCases, Logic, Utilities). Obviously, there is a reason for that: lower-level tiers should not be able to access Application, as far as it makes them able to access UseCases via Container. But Utilities (and sometimes other components) often need application Context - for example, it is required to access file storage. It is ok to implicitly pass Application object as a Context via component constructor.
 
 #### One more tier?
 
@@ -405,7 +405,7 @@ Formally speaking, what we have here is a some kind of subutility - utility, use
 
 ![Subtier](./subtier.png)
 
-Note that DBInstance cannot be placed to Tools package, as far as it defines some project-unique stuff, like table names and columns (what in fact Room's `@Entity` is). Similarly, ExecuteHelper (together with RequestHelper and ResponseProcessor) is not just a tool for HTTP requests format, but defines project-specific things like base URL, common request headers and HTTP errors parsing algorithm.
+Note that DBInstance cannot be placed to Tools package, as far as it defines some project-unique stuff, like table names and columns (what in fact Room's `@Entity` is). Similarly, ExecuteHelper (together with RequestHelper and ResponseProcessor) is not just a tool for HTTP parsing, but defines project-specific things like base URL, common request headers and HTTP errors parsing algorithm.
 
 Although this new "tier" does not exactly meet grand scheme, it still perfectly fits higher-level architecture concepts. It meets "no circular dependencies" rule, meets global tiers concept, and does not break other concepts. This "issue" is an example of how Wooden Architecture can be extended to meet various requirements and environment.
 
@@ -443,7 +443,7 @@ Every Activity, Service and BroadcastReceiver has zero or one corresponding UseC
 
 Activities often use `ViewModel` object from Android API's to handle configuration changes properly. In that case, ViewModel becomes a mediator between Activity and UseCase - Actvitiy requests data from ViewModel, and ViewModel requests data from UseCase.
 
-Services and BroadcastReceiver are not needed to care about configuration changes, so they usually request UseCase directly.
+Services and BroadcastReceivers are not needed to care about configuration changes, so they usually request UseCase directly.
 
 Fragments (if used), being an active lifecycle players, work similar to Activity: separate UseCase is created for every Fragment, and Fragment can retrieve application data from UseCase (directly or via ViewModel).
 
@@ -451,7 +451,7 @@ In contrast to Fragment, Views are passive. View has no idea about application l
 
 Activities are designed independently from each other. You should never keep implicit or explicit reference from one Activity to another, and, in general, Activity should know nothing about other Activities (just like components in one tier should know nothing about each other). But it is fine to send `startActivity` Intents (with parameters, if needed) from one Activity to another - at least while your UI navigation is not too complicated. Similarly, Fragments are designed independent from other Fragments and Activities in general, but a minimal data transfer between them is possible.
 
-These topics would be described in detail later in a separate chapter.
+These topics (I hope) will be described in detail later in a separate chapter.
 
 #### Who is the captain?
 
@@ -459,14 +459,14 @@ Well, we have our ship assembled together and almost ready for departure. Ship c
 
 Although this question can be answered differently for various systems, it is highly important for Android due to Android's architecture.
 
-You know that Android application can be killed when it is in background. More exactly speaking, it can be killed any time when it is not in foreground, i.e. nothing of the following is met:
+You know that Android application can be killed while it is in background. More exactly speaking, it can be killed any time when it is not in foreground, i.e. nothing of the following is met:
 - There is an Activity on the screen
 - There is a Service (prefferably foreground) working
 - BroadcastReceiver or ContentProvider is handling a request right now.
 
 Like a ship cannot sail without a captain, Android application, in fact, cannot work without Activity or Service or BroadcastReceiver or ContentProvider alive. **Activity/Service/BroadcastReceiver/ContentProvider is the captain among all other application components**.
 
-You will have dozens of UseCases, Utilities, Logic and other classes on your code. Despite the huge volume of this code, all these components are passive. **No any action should be performed in your application without a *command* from Activity or Service**
+You will have dozens of UseCases, Utilities, Logic and other classes on your code. Despite the huge volume of this code, all these components are passive. **No any action should be performed in your application without a *command* from Activity or Service (or BroadcastReceiver or ContentProvider)**
 
 It is a common mistake for Android applications to create an active object, performing some useful work and firing events over whole application, and leave this object somewhere in memory alone. For example, if you application has to create and keep WebSocket connection, developers often create a WebSocket object, add some kind of EventBus listener to it and just leave this connection abandoned. It causes unpredictable behavior in case if application being killed, or if second connection instance has been occasionally created.
 
