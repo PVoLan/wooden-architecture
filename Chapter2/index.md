@@ -1,6 +1,10 @@
 [Main page](../README.md)  
 [Previous chapter](../Chapter1/index.md)  
 
+Chapter 2: Table of contents:
+[Gradle role](#gradle)
+
+
 # General Architecture description
 
 ![architecture preview](./arch_small.png)
@@ -9,7 +13,7 @@
 
 Okay, now we'll start with application architecture itself.
 
-## Gradle role
+## <a name="gradle"></a>Gradle role
 
 Pay some attention to gradle modules on the image above. Although you can put all the code into one module, and replace gradle modules with separate Java packages, I'd recommend you to use modules as specified (or, if you know better solution for the purpose described below, please send me a note).
 
