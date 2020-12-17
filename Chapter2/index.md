@@ -1,8 +1,20 @@
 [Main page](../README.md)  
 [Previous chapter](../Chapter1/index.md)  
 
-Chapter 2: Table of contents:
-[Gradle role](#gradle)
+## Chapter 2: Table of contents:  
+[Gradle role](#gradle)  
+[UseCases](#usecases)  
+[Utilities](#utilities)  
+[Network](#network)  
+[Storage](#storage)  
+[Memory storage](#memstorage)  
+[Other utilities](#otherutilities)  
+[Entities](#entities)  
+[Logic](#logic)  
+[Tools](#tools)  
+[Container](#container)  
+[UITools](#uitools)  
+[Droid](#droid)  
 
 
 # General Architecture description
@@ -29,7 +41,7 @@ Unfortunately, there is one huge disadvantage with using Gradle modules: perform
 
 Let's go through the architecture and define what components it contains
 
-### UseCases
+### <a name="usecases"></a>UseCases
 
 UseCases, probably, is the most important detail of the Wooden Architecture. In fact, I think, you can implement UseCases only, and throw away rest of this document - just this small enhancement could significantly improve code quality of about 60% applications I've ever worked with.
 
@@ -182,13 +194,13 @@ Finally, if you develop an application to use with Wi-fi only, and if you really
 
 Summary: 95% of android UseCases fit into the click -> processing -> result pattern, and they perfectly fit into synchronous calls from the point of performance. You still can adjust the rules for the remaining 5% - but you have to make it quick only after you made it right.
 
-### Utilities
+### <a name="utilities"></a>Utilities
 
 Utility is a relatively independent code module, implementing entire piece of functionality. Typically this functionality may contain some piece of what developers call "business rules", but not too much - one utility is possible to use in multiple business situations.
 
 Utilities may depend only on Entities and Tools. They never depend on other objects (including other utilities).
 
-#### Network
+#### <a name="network"></a>Network
 
 This module is responsible for sending network requests, receiving data from server, managing connections (if required) etc.
 
@@ -212,7 +224,7 @@ Network modules are also responsible for network error handling. This includes c
 
 Retrofit note. (Retrofit is a commonly used network library). You can use Retrofit for request/response formatting, but consider the requirements above. Basic Retrofit features include: relying on Entity field names for formatting, storing a data (like authorization tokens) inside the network module - be aware of using this features. Also, note that default Retrofit configuration does not raise any errors, if some required response fields are missing - it just silently puts null into your Entity. Considering that, I find Retrofit quite useless for Wooden Architecture, and recommend using OkHttp and manual Json parsing instead.
 
-#### Storage
+#### <a name="storage"></a>Storage
 
 Storage module represents disk storage. It is responsible for everything needed to store data on internal disk storage: SharedPreferences and SQLite databases is a common example.
 
@@ -237,7 +249,7 @@ The Storage tier is the only place where you should store your data on disk. Do 
 
 By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance. As a minimum, put a `version=1` key-value to your storage.
 
-#### Memory storage
+#### <a name="memstorage"></a>Memory storage
 
 As you may rememeber, UseCases (and Logic) objects are now allowed to store any data - neither on disk, neither in memory. But sometimes you need to keep some data in memory. This is where memory storage comes to play.
 
@@ -247,7 +259,7 @@ Obviously, Memory storages are not required to care about migrations.
 
 Memory Storage + Storage represents _application state_. At every moment application behavior will depend only on these two modules.
 
-#### Other utilities
+#### <a name="otherutilities"></a>Other utilities
 
 Depending on the nature of your app, you may need other kinds of utilities. Any entire, complete part of functionality which depends on Entities and (typically) some third-party software/hardware is a good candidate to be a utility. Make sure your utility does not contain too much of "business rules" - otherwise you may want to extract some business rules to Logic tier.
 
@@ -259,7 +271,7 @@ Here are some examples of utilities:
 - Third party library wrapper (including NDK one), which should depend on Entities and is unreasonable to put in Tools module
 
 
-### Entities
+### <a name="entities"></a>Entities
 
 Entities are data objects. They represent a pieces of data which components transfer to each other as method parameters and return values. All the public component methods should have only entities and collections of entities as a parameters and return values.
 
@@ -299,7 +311,7 @@ Because of the reduced visibility, independence constraint for Local entities is
 
 When creating Local entities, you may create them as a completely new entity (with newly created fields. for ex. `MainScreenUseCase.ForecastItem`), or create is as a wrapper over another Entity (global or local - example is `ForecastStorage.CityForecastCache`, which is a wrapper over `CityForecast`). As far as all Entities are immutable, both approaches are fine, but when using last one, make sure your wrapper does not disclose unnecessary information of inner object - inner object may be a part of another tier.
 
-### Logic
+### <a name="logic"></a>Logic
 
 Logic is an optional tier, used for relatively complicated applications.
 
@@ -346,7 +358,7 @@ That's why in general UseCases are allowed to bypass Logic tier(s) and access to
 
 Choose the strategy of "which Logic tier(s) are allowed to bypass" depending on your application nature.
 
-### Tools
+### <a name="tools"></a>Tools
 
 Sometimes you may feel that programming language or framework you use is not perfect. What if the Java or Android SDK would contain %this_cool_feature%?
 
@@ -376,7 +388,7 @@ Any other module in your code (including Global Entities) can depend on Tools. T
 
 What is the main difference between Tools and other modules? Tool has no idea about what project it is used in. If I have a code snippet which can be easily copy-pasted from my medical application to cargo taxi application I will develop next month, as well as into musical player app, this is a good candidate to become a Tool. Otherwise I have to consider a Logic component instead, Utility, or something similar.
 
-### Application container
+### <a name="container"></a>Application container
 
 Okay, we have defined most of the modules and components we use in the architecture. Now it's time to assemble them all together. This is what Container is used for.
 
@@ -417,14 +429,14 @@ Note that DBInstance cannot be placed to Tools package, as far as it defines som
 Although this new "tier" does not exactly meet grand scheme, it still perfectly fits higher-level architecture concepts. It meets "no circular dependencies" rule, meets global tiers concept, and does not break other concepts. This "issue" is an example of how Wooden Architecture can be extended to meet various requirements and environment.
 
 
-### UITools
+### <a name="uitools"></a>UITools
 
 Oh, this is pretty simple. UITools is just like tools, but for UI. Only Droid module can depend on UITools - there is no need for UseCase to know something about UI, isn't it? UITools can depend on Tools and nothing more.
 
 Various commonly used, project-independent UI tweaks are placed here. Like with Tools, these tweaks are kept project-independent. Note that if particular UITool has a project-branded typeface or color - this is not a Tool, such object should be placed in Droid module.
 
 
-### Droid
+### <a name="droid"></a>Droid
 
 *These aren't the droids you're looking for...*
 
