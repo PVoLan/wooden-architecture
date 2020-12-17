@@ -1,3 +1,6 @@
+[Main page](../README.md)  
+[Previous chapter](../Chapter1/index.md)  
+
 # General Architecture description
 
 ![architecture preview](./arch_small.png)

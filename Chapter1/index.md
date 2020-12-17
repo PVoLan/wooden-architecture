@@ -1,3 +1,5 @@
+[Main page](../README.md)  
+
 # Key concepts
 
 ## No circular dependencies
@@ -192,3 +194,5 @@ Static methods are allowed, although, if \
 a) Their execution and result depends only on it's parameters and nothing more. \
 b) They do not change anything outside except it's parameters and return value \
 Various helpers (classes, containing only static methods) are widely used to reduce boilerplate code
+
+[Next chapter](../Chapter2/index.md)  
