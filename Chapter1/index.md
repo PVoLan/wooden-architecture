@@ -1,8 +1,15 @@
 [Main page](../README.md)  
 
+## Chapter 1: Table of contents:  
+[No circular dependencies](#ncd)  
+[Tiers and components](#tac)  
+[Captain and a deckhand](#caad)  
+[Keep data separated from processing](#kdsfp)  
+[No static objects/references](#nsor)  
+
 # Key concepts
 
-## No circular dependencies
+## <a name="ncd"></a>No circular dependencies
 
 Circular dependencies is a pain. Beware of them at any price.
 
@@ -32,7 +39,7 @@ But this concept is not limited to OOP-object. If ```methodA()``` calls ```metho
 You can also treat "object A" as any module of you application, such a gradle module, running instance, particular server, or something.
 
 
-## Tiers and components
+## <a name="tac"></a>Tiers and components
 
 So, to make sure no circular dependencies will be presented, whole application is splitted into several **tiers** (some sources also call it "layers"). Concept is similar to multitier architecture, but particular tier roles are some different from [classic structure](https://en.wikipedia.org/wiki/Multitier_architecture).
 
@@ -53,7 +60,7 @@ There are general rules about how components are placed into tiers:
 - Typically, Tier 1 components should have no direct access to Tier 3 components. So, any tier should access only next tier, but not the next after next. The only exception is allowed for Logic tier, see Logic section.
 
 
-## Captain and a deckhand
+## <a name="caad"></a>Captain and a deckhand
 Although tiers below should not depend on tiers above, sometimes it is required for underlying tiers to communicate with tiers above. Here "Captain and a deckhand" concept comes to.
 
 Have you ever been on a ship? On a small sailing yacht, hundred-meters long oil tanker or a warship with a thousands of soldiers? Any ship, either small or big one, has a captain and a deckhands.
@@ -150,7 +157,7 @@ class A {
 
 ```
 
-## Keep data separated from processing
+## <a name="kdsfp"></a>Keep data separated from processing
 
 The code below is a common pattern for various frameworks, especially ORMs.
 
@@ -182,7 +189,7 @@ and use separated classes to *process* the data
 
 See also Entities section about common entities restrictions.
 
-## No static objects/references
+## <a name="nsor"></a>No static objects/references
 
 Never use static references to keep any data/fields/objects. Also never use singleton pattern. If you have a single non-static object, it is always easy to make it visible in a static context, but vice versa is troublesome.
 
