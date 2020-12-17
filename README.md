@@ -15,7 +15,7 @@ I develop Android applications professionally since 2011. Over the years I've el
 
 I've called it "Wooden architecture" - because I find it as straightforward and reliable as rude wooden houses construction. Most probably you're not going to build a skyscraper with woods, but it is pretty enough for any application of small and medium size.
 
-Wooden core concepts can be used not only for Android applications, but theoretically for any platform. Wooden architecture was originally based on a server-side backend architecture I was participated in, later was successfully used in crossplatform iOS/Android applications, Windows Desktop application and even in a small PHP server. But surely this guide is speaking mostly about Android.
+Wooden core concepts can be used not only for Android applications, but theoretically for any platform. Wooden architecture was originally based on a server-side backend architecture I was participating in, later was successfully used in crossplatform iOS/Android applications, Windows Desktop application and even in a small PHP server. But surely this guide is speaking mostly about Android.
 
 The guide is accompanied with a [sample app](./WASampleApp) with code. While reading the guide you can refer to sample code to see how the approaches described work in practice. The app is a simple weather forecast application: you enter a city name and receive a weather forecast. Forecasts downloaded are cached in a local database for some time. Application also shows a marker if the weather is good enough to go outside for some running: what is "good enough" is defined by user via "Settings" screen.
 
