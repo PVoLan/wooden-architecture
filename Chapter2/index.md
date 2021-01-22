@@ -371,17 +371,16 @@ looks more smart in my code than
 `Log.i(LOG_TAG, "Hello!")`
 - JSON tool. I'm generally fine with `JSONObject` API, but I often want parser to throw exception if `null` value was found. `JSONObject.getString()` will throw if no key found, but will return null if key with `null` value was found, what is often inappropriate when parsing network responses with mandatory fields.
 - Calendar helper. Few lines of code to replace  
- rgrg
   ```java
   SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
   simpleDateFormat.setCalendar(calendar);
   String formattedDate = simpleDateFormat.format(c.getTime());
   ```
- with
- ```java
-String formattedDate = CalendarHelper.format(calendar, format);
-```
- makes code much cleaner
+  with
+  ```java
+  String formattedDate = CalendarHelper.format(calendar, format);
+  ```
+  makes code much cleaner
 
 And others. Surely, the set of Tools to use may differ depending on the task and developer's personal prefernces. Why not using popular libraries instead? Well, this is my preference - I don't want to add a new dependency to the project if problem can be solved just with a few lines of code.
 
