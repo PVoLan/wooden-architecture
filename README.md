@@ -1,3 +1,7 @@
+# Wooden architecture
+
+An architecture guide for Android applications. Sample code included.
+
 # Table of contents
 
 [1. Key concepts](./Chapter1/index.md)  
