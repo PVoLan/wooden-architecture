@@ -196,7 +196,7 @@ Summary: 95% of android UseCases fit into the click -> processing -> result patt
 
 ### <a name="utilities"></a>Utilities
 
-Utility is a relatively independent code module, implementing entire piece of functionality. Typically this functionality may contain some piece of what developers call "business rules", but not too much - one utility is possible to use in multiple business situations.
+Utility is a relatively independent code module, implementing entire piece of functionality. Typically this functionality may contain some piece of what developers call "business rules", but not too much - one particular utility is expected to use in multiple business situations.
 
 Utilities may depend only on Entities and Tools. They never depend on other objects (including other utilities).
 
@@ -210,7 +210,7 @@ Components of this module will typically contain a set of methods like
 
 Every such a method maps exactly one request of the API you use. If you use an HTTP API, these methods are the only you need. If you use an API with permanent connection, like direct sockets, WebSockets or similar, you'll also probably need a methods like `connect()` and `disconnect()`, plus an event generator for incoming requests.
 
-You may have as many network components as you need - I do not recommend to put all of the APIs you use into one component. Typically, I group public methods into component based on their applicability, maximum 3-5 methods per component: one component will contain all the methods working with user login, another - all the methods processing shop catalog, third - everything about the order processing. But this is not a strict rule, so you may group methods within your components at you choice: as far as most of the API calls are independent from each other, grouping doesn't matter a lot. If you use multiple backends for your needs (for example, your own backend + Facebook API), you may also consider that for grouping.
+You may have as many network components as you need - I do not recommend to put all of the APIs you use into one component. Typically, I group public methods into component based on their applicability, maximum 3-5 methods per component: one component will contain all the methods working with user login, another - all the methods processing shop catalog, third - everything about the order processing. Sometimes I create separate component for every API endpoint. You may group methods within your components at you choice: as far as most of the API calls are independent from each other, grouping doesn't matter a lot. If you use multiple backends for your needs (for example, your own backend + Facebook API), you may also consider that fact for grouping.
 
 Public component methods should accept/return global or local Entities as an input/output. Network classes are fully responsible for request formatting and response parsing.
 
@@ -220,9 +220,9 @@ Very important: do not store any data inside the Network module. Public methods 
 
 Some architectures consider server-side as a remote repository. Although it works for some cases, this approach is not universal. In general, application API does not consists only of Create-Read-Update-Delete commands. Even such a simple action like "create a user" is often not just a user creation - server should not just create a database record, but also perform some initial setup, send a greetings email, apply some privileges, grant access, run a tutorial mission, etc. Should we treat "launch nuclear reactor" request as just an `Update reactor set enabled=true` operation? I don't think so. That's why I consider every network request as an action, as a data processing operation. That means we should not store data here.
 
-Network modules are also responsible for network error handling. This includes connection errors, response formatting errors, server errors - any of them should be handled accurately and translated into independent form. I personally prefer to throw Exceptions, but this is optional, you may provide specific Entity instead.
+Network modules are also responsible for network error handling. This includes connection errors, response formatting errors, server errors - any of them should be handled accurately and translated into independent form. As I mentioned above, I personally prefer to throw Exceptions, but you may return specific Entity instead.
 
-Retrofit note. (Retrofit is a commonly used network library). You can use Retrofit for request/response formatting, but consider the requirements above. Basic Retrofit features include: relying on Entity field names for formatting, storing a data (like authorization tokens) inside the network module - be aware of using this features. Also, note that default Retrofit configuration does not raise any errors, if some required response fields are missing - it just silently puts null into your Entity. Considering that, I find Retrofit quite useless for Wooden Architecture, and recommend using OkHttp and manual Json parsing instead.
+Retrofit note. (Retrofit is a commonly used network library). You can use Retrofit for request/response formatting, but consider the requirements above. Basic Retrofit features include: relying on Entity field names for formatting, storing a data (like authorization tokens) inside the network module - be aware of using this features. Also, note that default Retrofit configuration does not raise any errors, if some required response fields are missing - it just silently puts null into your Entity. Considering that, I find Retrofit quite useless for Wooden Architecture and recommend using OkHttp and manual Json parsing instead.
 
 #### <a name="storage"></a>Storage
 
@@ -240,14 +240,14 @@ Sometimes you may want to put all the SQL tables into one Storage, but this may 
 
 Compromise solution is to use single database instance as a "backend" for multiple storages. Then you will keep all tables in one DB instance, but every Storage will have access only to particular tables. In this case you need to make sure you Storages are independent: no cross-Storage foreign key constraints are allowed, and no cross-Storage JOINs are allowed.
 
-By the way, I do not recommend using JOINs and foreign keys at all, at least as far as you have no performance issues. Remember that main Storage purpose is to read and write data. JOINs and foreign keys typically represent a business logic relations between data items, and this logic is not welcome on Storage tier. As far as your performance is fine, do as many logic as possible on Logic or UseCase tier. Yes, I would prefer a `for` loop to JOIN - most of Android developers are good Java developers, but not so good in SQL dialects, so `for` loop is more readable in general. :) Android application rarely has really large database, iterating up to 10000 objects in a `for` loop is not a problem (of course, if you wouldn't perform a database request at every iteration). So, again, prefer Logic tier for joining operations and use SQL joins only if have no other option.
+By the way, I do not recommend using JOINs and foreign keys at all, at least as far as you have no performance issues. Remember that main Storage purpose is to read and write data. JOINs and foreign keys typically represent a business logic relations between data items, and this logic is not welcome on Storage tier. As far as your performance is fine, do as many logic as possible on Logic or UseCase tier. Yes, I would prefer a `for` loop to JOIN - most of Android developers are good Java developers, but not so good in SQL dialects, so `for` loop is more readable in general :) Android application rarely has really large database, iterating up to 10000 objects in a `for` loop is not a problem (of course, if you wouldn't perform a database request at every iteration). So, again, prefer Logic tier for joining operations and use SQL joins only if have no other option.
 
 The Storage tier is the only place where you should store your data on disk. Do not use SharedPreferences outside of Storage tier, do never store sensitive data in Activity's `savedInstanceState`, and so on. Keeping all the disk-stored data in one module gives you the following benefits:
 - Every time when you launch your application, it's behavior, in fact, depends only on what is stored on disk. Stored data is what defines application _state_ in every particular moment between launches. Keeping storages together, you keep all the state in one place.
 - When a new developer comes to a project, let him know what the application state contains of. This will simplify his/her onboarding.
-- Sometimes it happens so that application _state_ remains the same, but the application _code_ changes. Users call it "update the application of a new version", developers know that update often causes a Storage migration. If you keep all the data in one place, your migration will stay limited to Storage tier only.
+- Sometimes it happens so that application _state_ remains the same, but the application _code_ changes. Users call it "update the application to a new version", developers know that update sometimes causes a Storage migration. If you will keep all the data in one place, your migration will stay limited to Storage tier only.
 
-By the way, about migration. If not the all user's data is stored on server, and you can't just logout user after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance. As a minimum, put a `version=1` key-value to your storage.
+By the way, about migration. If not the all user's data is stored on server, and you can't just logout user and clear local storage after every version update, once upon a time you will meet a migration, sooner or later. It will happen unexpectedly, so think about it in advance. As a minimum, put a `version=1` key-value to your storage.
 
 #### <a name="memstorage"></a>Memory storage
 
@@ -279,7 +279,7 @@ Entites are POJO's (Plain Old Java Objects). They do only contain data. They do 
 
 As a rare exemption, short pure methods are allowed, if they do not change entity fields and their behavior is affected only by entity fields. For example, if you have `Order` entity, which contains a list of `OrderItem` entities, you may find quite handy to add `getItemCount()` method to `Order` class. But in case of any doubts prefer to put data processing methods to Logic classes.
 
-Although it is not 100% strict, I highly recommend you to use only _immutable_, read-only entities. In this case, no setters are allowed in Entity classes. Also, although Java does not have a good support for that ([here is an option](https://docs.oracle.com/javase/1.5.0/docs/api/java/util/Collections.html#unmodifiableList(java.util.List))), I recommend you to treat any Entity collections as read-only. Using immutable entities and lists makes you sure that after you receive an Entity as a return value from some method, no one will unexpectedly change it. If you need to modify an entity - just create a new one!
+I highly recommend you to use only _immutable_, read-only entities. In this case, no setters are allowed in Entity classes. Also, although Java does not have a good support for that ([here is an option](https://docs.oracle.com/javase/1.5.0/docs/api/java/util/Collections.html#unmodifiableList(java.util.List))), I recommend you to treat any Entity collections as read-only. Using immutable entities and lists makes you sure that after you receive an Entity as a return value from some method, no one will unexpectedly change it. If you need to modify an entity - just create a new one!
 
 There are two types of entities in the architecture: global and local ones.
 
@@ -307,7 +307,7 @@ This is where local entities come to play. Like global entities, they are also P
 
 For example, `CityForecastCache` class relates to `ForecastStorage` and has same visibility as `ForecastStorage`. That means UseCase and Logic classes can access `CityForecastCache`, but Network and UI classes can not.
 
-Because of the reduced visibility, independence constraint for Local entities is relaxed. They may depend on same tools and libraries their component depends on. That means they, if needed, can be used with Retrofit/Room for automatic parsing. It is still recommended to keep Local entity public interface independent, but this is not 100% mandatory. In best case, if backend developer API will change some JSON fields, local entity public interface should not change. In worst case, it will change, and Logic and UseCase classes using this object will also change, but rest of the application will stay untouched.
+Because of the reduced visibility, independence constraint for Local entities is relaxed. They may depend on same tools and libraries their component depends on. That means they, if needed, can be used with Retrofit/Room for automatic parsing. It is still recommended to keep Local entity's public interface independent, though. In best case, if backend developer API will change some JSON fields, local entity public interface should not change. In worst case, it will change, and Logic and UseCase classes using this object will also change, but rest of the application will stay untouched.
 
 When creating Local entities, you may create them as a completely new entity (with newly created fields. for ex. `MainScreenUseCase.ForecastItem`), or create is as a wrapper over another Entity (global or local - example is `ForecastStorage.CityForecastCache`, which is a wrapper over `CityForecast`). As far as all Entities are immutable, both approaches are fine, but when using last one, make sure your wrapper does not disclose unnecessary information of inner object - inner object may be a part of another tier.
 
@@ -327,7 +327,7 @@ Logic components is what developers often call "business logic", but it is not r
 
 Similar to other tiers, you may have multiple Logic components. Like UseCases, Logic components can depend on Entities, Utilities and Tools. At a first glance, Logic components should not depend on each other, but this rule may be canceled, see below. Some Logic objects may depend on nothing (imagine tax calculation algorithm in financial application, whose result depends only on parameters passed).
 
-Like UseCases, Logic objects are use for data processing, and are not allowed to store any data fields. Use storages if you need to store something.
+Like UseCases, Logic objects are used for data processing, and are not allowed to store any data fields. Use Storages if you need to store something.
 
 Like UseCases (and like all Utilities, though), Logic component methods are highly recommended to be synchronous as much as possible. Logic methods may be really complicated, and we should avoid unnecessary complexity.
 
@@ -354,7 +354,7 @@ If you'll look at grand Wooden Architecture [scheme](./arch.png), you may find t
 
 Well, if 80% of your application screens looks like "open screen - send network request - show data received on the screen", but you still need a Logic tier due to rest of 20% screens, there is no sense to wrap every network request into a separate Logic component. In that case, 80% of your Logic components will just re-call corresponding Network component. That's a boilerplate.
 
-That's why in general UseCases are allowed to bypass Logic tier(s) and access to Utilities directly. But you may change this rule depending on your application. Sometimes, when the application structure is complex, it makes sense to force all the UseCases to access Logic level, even if in fact only one network call is required. It will increase boilerplate, but simplify and regularize dependencies.
+That's why in general UseCases are allowed to bypass Logic tier(s) and access to Utilities directly. But you may change this rule depending on your application. Sometimes, when the application structure is complex, or if you're unsure about your architecture stability, it makes sense to force all the UseCases to access Logic level, even if in fact only one network call is required. It will increase boilerplate, but will simplify and regularize dependencies.
 
 Choose the strategy of "which Logic tier(s) are allowed to bypass" depending on your application nature.
 
@@ -433,7 +433,7 @@ Although this new "tier" does not exactly meet grand scheme, it still perfectly 
 
 Oh, this is pretty simple. UITools is just like tools, but for UI. Only Droid module can depend on UITools - there is no need for UseCase to know something about UI, isn't it? UITools can depend on Tools and nothing more.
 
-Various commonly used, project-independent UI tweaks are placed here. Like with Tools, these tweaks are kept project-independent. Note that if particular UITool has a project-branded typeface or color - this is not a Tool, such object should be placed in Droid module.
+Various commonly used, project-independent UI tweaks are placed here. Like with Tools, these tweaks are kept project-independent. Note that if particular UITool has a project-branded typeface or color - this is not a Tool, such object should be placed in Droid module (see `uikit` package in Sample app).
 
 
 ### <a name="droid"></a>Droid
