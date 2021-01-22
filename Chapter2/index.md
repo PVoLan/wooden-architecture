@@ -372,11 +372,11 @@ looks more smart in my code than
 - JSON tool. I'm generally fine with `JSONObject` API, but I often want parser to throw exception if `null` value was found. `JSONObject.getString()` will throw if no key found, but will return null if key with `null` value was found, what is often inappropriate when parsing network responses with mandatory fields.
 - Calendar helper. Few lines of code to replace  
  rgrg
-    ```java
- SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
- simpleDateFormat.setCalendar(calendar);
- String formattedDate = simpleDateFormat.format(c.getTime());
-    ```
+  ```java
+  SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+  simpleDateFormat.setCalendar(calendar);
+  String formattedDate = simpleDateFormat.format(c.getTime());
+  ```
  with
  ```java
 String formattedDate = CalendarHelper.format(calendar, format);
