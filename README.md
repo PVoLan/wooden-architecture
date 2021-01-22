@@ -21,6 +21,6 @@ The guide is accompanied with a [sample app](./WASampleApp) code. While reading 
 
 Application uses [OpenWeatherMap API](https://openweathermap.org/api) to get a forecast. If one day you'll find this API down, or you will experience network issues, or you'd like to perform some tests, a "Fake API" is also provided - see [WASampleApp/d_container/src/main/java/ru/pvolan/container/Container.java](./WASampleApp/d_container/src/main/java/ru/pvolan/container/Container.java) to switch on it.
 
-Disclaimer. _A good architecture comes from understanding it more as a journey than as a destination. Robert C. Martin._ Although this guide is quite practical and detailed, I'm not going to bring you to some "once and for all" solution. I'm just showing you the path I've personally walked during my journey. It is your choice to follow me or find your own way.  
+Disclaimer. _A good architecture comes from understanding it more as a journey than as a destination. Robert C. Martin._ Although this guide is quite practical and detailed, I'm not going to bring you to some "once and for all" solution. I'm just showing you the path I've personally walked during my journey. It is your choice to follow me or find your own way. Some implementation details may require adjustment to your particular project.  
 
 [Okay, let's go inside!](./Chapter1/index.md)  
