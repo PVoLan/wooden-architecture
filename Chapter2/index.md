@@ -1,7 +1,7 @@
 [Main page](../README.md)  
 [Previous chapter](../Chapter1/index.md)  
 
-## Chapter 2: Table of contents:  
+# Chapter 2: Table of contents:  
 [Gradle role](#gradle)  
 [UseCases](#usecases)  
 [Utilities](#utilities)  

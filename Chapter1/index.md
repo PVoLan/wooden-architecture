@@ -1,6 +1,6 @@
 [Main page](../README.md)  
 
-## Chapter 1: Table of contents:  
+# Chapter 1: Table of contents:  
 [No circular dependencies](#ncd)  
 [Tiers and components](#tac)  
 [Captain and a deckhand](#caad)  
