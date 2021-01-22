@@ -370,8 +370,8 @@ Here are some examples of Tools I often use:
 looks more smart in my code than   
 `Log.i(LOG_TAG, "Hello!")`
 - JSON tool. I'm generally fine with `JSONObject` API, but I often want parser to throw exception if `null` value was found. `JSONObject.getString()` will throw if no key found, but will return null if key with `null` value was found, what is often inappropriate when parsing network responses with mandatory fields.
-- Calendar helper. Few lines of code to replace
-
+- Calendar helper. Few lines of code to replace  
+ rgrg
  ```java
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
 simpleDateFormat.setCalendar(calendar);
