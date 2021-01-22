@@ -291,7 +291,7 @@ There is a constraint here, although. Global Entities should depend on **nothing
 
 There is a common pattern to use some third-party tools, like Retrofit (commonly used network library), Room (commonly used SQL databases library), or similar, to automatically convert POJO to JSON API request or SQLite tables, based on entity field names. This is **strictly forbidden** for global Entities. Even when such a conversion does not cause a gradle dependency, this causes an implicit binding between entity and network request/database format. As far as global entities are used globally, this binding can have critical consequences.
 
-Let me repeat again. `@SerializedName` (a common Retrofit pattern) is forbidden when using Global entities. But even if by occasion you Entity field names match API JSON keys, you must provide manual parsing from JSON to Entity and back. Same story for Room - your entity is not an `@Entity`, and you should never expect them to be same.
+Let me repeat again. `@SerializedName` (a common Retrofit pattern) is forbidden when using Global entities. But even if by occasion your Entity field names match API JSON keys, you must provide manual parsing from JSON to Entity and back. Same story for Room - your entity is not an `@Entity`, and you should never expect them to be same.
 
 The key idea is that if backend developer would like to rename some API field, this rename should not affect (i.e. should cause NO code changes to) your Entity and should not affect (i.e. should cause NO code changes to) your UI classes (which use this Entity). Similar to, if one day you would like to slightly refactor your Room database, this refactoring should be limited to Storage module as long as possible.
 
