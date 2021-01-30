@@ -59,7 +59,7 @@ Disclaimer. _A good architecture comes from understanding it more as a journey t
 
 ### Feedback
 
-I welcome your feedback about this guide. If you find some errors, questions or just want to discuss some points, please open [issue](./issues) and let's talk!
+I welcome your feedback about this guide. If you find some errors, questions or just want to discuss some points, please open [issue](https://github.com/PVoLan/wooden-architecture/issues) and let's talk!
 
 ### Lead me to the details, finally!
 [Okay, let's go inside!](./Chapter1/index.md)  
