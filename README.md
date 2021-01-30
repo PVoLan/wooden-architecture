@@ -21,7 +21,7 @@ I've called it "Wooden architecture" - because I find it as straightforward and 
 
 ### The purpose
 
-First of all, the main motivation to write this article was actual lack of architecture guides for mobile applications. Despite the fact Android OS became popular development platform about 10 years ago, there is no any single, agile enough, widely-used and well-defined architectural approach for Android apps. In order to fill this lack, the current guide fully describes the suggested architecture, starting from high-level concepts and finishing with code examples. I hope to make it easy to read and understand for developers with medium experience.
+The main motivation to write this article was actual lack of architecture guides for mobile applications. Despite the fact Android OS became popular development platform about 10 years ago, there is no any single, agile enough, widely-used and well-defined architectural approach for Android apps. In order to fill this lack, the current guide fully describes the suggested architecture, starting from high-level concepts and finishing with code examples. I hope to make it easy to read and understand for developers with medium experience.
 
 ### Comparison between Wooden architecture and other architecture approaches
 
