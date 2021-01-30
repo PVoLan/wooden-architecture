@@ -15,9 +15,9 @@ An architecture guide for Android applications. Sample code included.
 
 Hello everybody!
 
-I develop Android applications professionally since 2011. Over the years I've elaborated a set of architectural techniques and approaches, which I use in almost every app I develop, and which make my code stable and agile. Now I'd like to share these techniques with you.
+I develop Android applications professionally since 2011. Over the years I've elaborated a set of architectural techniques and approaches which I use in almost every app I develop and which make my code stable and agile. Now I'd like to share these techniques with you.
 
-I've called it "Wooden architecture" - because I find it as straightforward and reliable as rude wooden houses construction. Most probably you're not going to build a skyscraper with woods, but it is pretty enough for any application of small and medium size.
+I've called it "Wooden architecture" - because I find it as straightforward and reliable as rude wooden houses construction. Most probably you're not going to build a skyscraper with woods, but it is pretty enough for any application of small and medium size, what are 90% of Android apps.
 
 ### The purpose
 
@@ -33,11 +33,11 @@ Here is a list of known architecture approaches and comparison of these approach
 
 - [Google architecture guide](https://developer.android.com/jetpack/guide). This is an "official" guide published by Google at about 2019, as far as I remember. Despite it was published too late (Wooden architecture was born years before :), it is still a good attempt to bring an order to the architectural chaos in Android. Wooden architecture structure at a first glance may look very similar to this [picture](https://developer.android.com/jetpack/guide#overview), but some significant differences are also met.
 
- The Google architecture part related to Activity/ViewModel matches corresponding part of Wooden architecture quite tightly. But I find Google's Repository and other Model fundamentals too rigid: why do they think that the only thing what Android application does is data fetching and storing? Where is the business logic? Why do the treat server-side just as "Remote data source"? What about user actions and data processing?
+  The Google architecture part related to Activity/ViewModel matches corresponding part of Wooden architecture quite tightly. But I find Google's Repository and other Model fundamentals too rigid: why do they think that the only thing what Android application does is data fetching and storing? Where is the business logic? Why do the treat server-side just as "Remote data source"? What about user actions and data processing?
 
- If you will replace Google's Repository with Wooden's UseCase, you will find that these architecture structures are still quite similar. But Wooden architecture is more agile, gives you more strict modules definition and leaves you more space to grow.
+  If you will replace Google's Repository with Wooden's UseCase, you will find that these architecture structures are still quite similar. But Wooden architecture is more agile, gives you more strict modules definition and leaves you more space to grow.
 
- Another disadvantage of Google's guide is that it is too tight to third-party libraries, such as Retrofit, Dagger and others. Although there is nothing wrong with using third-party libraries when actually needed, your architecture should be independent from implementation details.
+  Another disadvantage of Google's guide is that it is too tight to third-party libraries, such as Retrofit, Dagger and others. Although there is nothing wrong with using third-party libraries when actually needed, your architecture should be independent from implementation details.
 
 - Clean architecture. When someone talks about Clean architecture, this [picture](https://medium.com/android-dev-hacks/detailed-guide-on-android-clean-architecture-9eab262a9011) usually pops up in minds. Some developers think that Clean architecture was developed by Google and is another "official" Android guide, but it isn't true: it became popular few years ago after someone has mentioned Clean architecture at one of the Google conferences, but it was not developed by Google.
 
