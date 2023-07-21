@@ -33,9 +33,9 @@ Here is a list of known architecture approaches and comparison of these approach
 
 - [Google architecture guide](https://developer.android.com/jetpack/guide). 
 
-_UPD Google guys do rewrite their guides like every year, so some propositions below are outdated. The paragraph is to be reviewed_
+  _UPD Google guys do rewrite their guides like every year, so some propositions below are outdated. The paragraph is to be reviewed_
 
-This is an "official" guide published by Google at about 2019, as far as I remember. Despite it was published too late (Wooden architecture was born years before :), it is still a good attempt to bring an order to the architectural chaos in Android. Wooden architecture structure at a first glance may look very similar to this [picture](https://developer.android.com/jetpack/guide#overview), but some significant differences are also met.
+  This is an "official" guide published by Google at about 2019, as far as I remember. Despite it was published too late (Wooden architecture was born years before :), it is still a good attempt to bring an order to the architectural chaos in Android. Wooden architecture structure at a first glance may look very similar to this [picture](https://developer.android.com/jetpack/guide#overview), but some significant differences are also met.
 
   The Google architecture part related to Activity/ViewModel and corresponding part of Wooden architecture are almost identical by essense. But I find Google's Repository and other Model fundamentals too rigid: why do they think that the only thing what Android application does is data fetching and storing? Where is the business logic? Why do the treat server-side just as "Remote data source"? What about user actions and data processing?
 
