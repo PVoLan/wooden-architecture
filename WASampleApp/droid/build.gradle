@@ -5,7 +5,6 @@ android {
     namespace "ru.pvolan.archsample"
 
     compileSdkVersion project.ext.compileSDK
-    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
         applicationId "ru.pvolan.archsample"

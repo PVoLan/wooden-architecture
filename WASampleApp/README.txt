@@ -1,0 +1,1 @@
+- Java 17 is required to build this project. Build will fail if using Java <17. Not tested with Java versions above 17.

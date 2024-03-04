@@ -3,7 +3,6 @@ apply plugin: 'com.android.library'
 android {
     namespace "ru.pvolan.archsample.usecases"
     compileSdkVersion project.ext.compileSDK
-    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion project.ext.minSDK
